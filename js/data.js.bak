@@ -1,0 +1,373 @@
+window.GAME_DATA = {
+  TILE_SIZE: 32,
+  MAP_COLS: 25,
+  MAP_ROWS: 20,
+  RODS: {
+    basic:   { name: 'Basic Rod',   price: 0,      timeLimit: 20,  autoCatch: false },
+    silver:  { name: 'Silver Rod',  price: 5000,   timeLimit: 30,  autoCatch: false },
+    gold:    { name: 'Gold Rod',    price: 10000,  timeLimit: 50,  autoCatch: false },
+    diamond: { name: 'Diamond Rod', price: 20000,  timeLimit: 120, autoCatch: false },
+    bape:    { name: 'Bape Rod',    price: 50000,  timeLimit: 999, autoCatch: true  },
+  },
+  BOAT_PRICE: 100000,
+  XP_PER_LEVEL: 500,
+  FISH_PRICE_PER_KG: 100,
+  MAX_INVENTORY: 12,
+  LOCATIONS: ['leknes','reine','kakern','kvalvika','henningsvaer'],
+  FISH_BY_LOCATION: {
+    leknes:       [ {name:'Atlantic Cod',minW:2,maxW:30,rarity:'common',xpMult:1}, {name:'Haddock',minW:1,maxW:15,rarity:'common',xpMult:1}, {name:'Pollock',minW:2,maxW:20,rarity:'uncommon',xpMult:1.2}, {name:'Mackerel',minW:1,maxW:10,rarity:'common',xpMult:1} ],
+    reine:        [ {name:'Atlantic Cod',minW:5,maxW:35,rarity:'common',xpMult:1}, {name:'Pollock',minW:3,maxW:18,rarity:'uncommon',xpMult:1.2}, {name:'Haddock',minW:2,maxW:12,rarity:'common',xpMult:1}, {name:'Skrei',minW:25,maxW:50,rarity:'rare',xpMult:3,requiresBoat:true} ],
+    kakern:       [ {name:'Sea Trout',minW:2,maxW:12,rarity:'common',xpMult:1}, {name:'Atlantic Cod',minW:5,maxW:25,rarity:'common',xpMult:1}, {name:'Haddock',minW:2,maxW:10,rarity:'common',xpMult:1}, {name:'Atlantic Salmon',minW:10,maxW:30,rarity:'rare',xpMult:3,requiresBoat:true} ],
+    kvalvika:     [ {name:'Atlantic Cod',minW:5,maxW:30,rarity:'common',xpMult:1}, {name:'Pollock',minW:5,maxW:20,rarity:'uncommon',xpMult:1.2}, {name:'Orca',minW:70,maxW:99,rarity:'legendary',xpMult:10,requiresBoat:true} ],
+    henningsvaer: [ {name:'Mackerel',minW:1,maxW:8,rarity:'common',xpMult:1}, {name:'Pollock',minW:5,maxW:25,rarity:'uncommon',xpMult:1.2}, {name:'Atlantic Cod',minW:10,maxW:40,rarity:'common',xpMult:1}, {name:'Bluefin Tuna',minW:40,maxW:99,rarity:'legendary',xpMult:8,requiresBoat:true} ],
+  },
+  RARITY_WEIGHTS: { common:65, uncommon:30, rare:5, legendary:1 },
+  GROUND_KEYS: {
+    'G':   'tile-grass',
+    'GR':  'tile-grass-flowers-red',
+    'GB':  'tile-grass-flowers-blue',
+    'GBu': 'tile-grass-bush',
+    'B':   'tile-beach',
+    'BR':  'tile-beach-flowers-red',
+    'BB':  'tile-beach-flowers-blue',
+    'BBu': 'tile-beach-bush',
+    'O':   'tile-ocean',
+    'D':   'tile-deep-ocean',
+  },
+};
+window.GUIDES = [
+  {key:'ow2',  name:'Astrid',  price:2000, desc:'Cheerful fisher'},
+  {key:'ow5',  name:'Bjorn',   price:2000, desc:'Sturdy mountain guide'},
+  {key:'ow8',  name:'Freya',   price:2000, desc:'Legendary sailor'},
+  {key:'ow10', name:'Solveig', price:2000, desc:'Master angler'},
+];
+
+window.ANIMALS = [
+  {id:1,  name:'Creature 1',  price:5000},
+  {id:2,  name:'Creature 2',  price:5000},
+  {id:3,  name:'Creature 3',  price:5000},
+  {id:4,  name:'Creature 4',  price:5000},
+  {id:5,  name:'Creature 5',  price:5000},
+  {id:6,  name:'Creature 6',  price:5000},
+  {id:7,  name:'Creature 7',  price:5000},
+  {id:8,  name:'Creature 8',  price:5000},
+  {id:9,  name:'Creature 9',  price:5000},
+  {id:10, name:'Creature 10', price:5000},
+  {id:11, name:'Creature 11', price:5000},
+  {id:12, name:'Creature 12', price:5000},
+  {id:13, name:'Creature 13', price:5000},
+  {id:14, name:'Creature 14', price:5000},
+  {id:15, name:'Creature 15', price:5000},
+  {id:16, name:'Creature 16', price:5000},
+];
+
+// Predefined spawn positions for animals on Kåkern map
+window.ANIMAL_SPAWNS = [
+  {tx:7,ty:2},{tx:12,ty:2},{tx:19,ty:2},{tx:22,ty:2},
+  {tx:7,ty:5},{tx:12,ty:5},{tx:19,ty:5},{tx:22,ty:5},
+  {tx:7,ty:13},{tx:12,ty:13},{tx:19,ty:13},{tx:22,ty:13},
+  {tx:7,ty:16},{tx:12,ty:16},{tx:19,ty:16},{tx:22,ty:16},
+];
+
+window.OBJECT_DEFS = {
+  'mountain-forest': { key:'obj-mountain-forest', tw:3, th:3, walkable:false, water:false },
+  'mountain-beach':  { key:'obj-mountain-beach',  tw:3, th:3, walkable:false, water:false },
+  'tree1':           { key:'obj-tree1',            tw:1, th:2, walkable:false, water:false },
+  'tree2':           { key:'obj-tree2',            tw:1, th:2, walkable:false, water:false },
+  'cabin1':          { key:'obj-cabin1',           tw:5, th:5, walkable:false, water:false },
+  'cabin2':          { key:'obj-cabin2',           tw:5, th:5, walkable:false, water:false },
+  'shop':            { key:'obj-shop',             tw:5, th:5, walkable:false, water:false },
+  'ferry-zone':      { key:'obj-ferry-zone',       tw:3, th:3, walkable:true,  water:false },
+  'lake':            { key:'obj-lake',             tw:3, th:3, walkable:false, water:true  },
+  'island-rock':     { key:'obj-island-rock',      tw:3, th:3, walkable:false, water:false },
+  'lake-beach':      { key:'obj-lake-beach',       tw:3, th:3, walkable:true,  water:false },
+  'island-beach':    { key:'obj-island-beach',     tw:3, th:3, walkable:true,  water:false },
+};
+
+window.buildMapGrids = function(map) {
+  const ROWS = GAME_DATA.MAP_ROWS, COLS = GAME_DATA.MAP_COLS;
+  const walkGrid  = Array.from({length:ROWS}, ()=>Array(COLS).fill(true));
+  const waterGrid = Array.from({length:ROWS}, ()=>Array(COLS).fill(false));
+  for (let r=0; r<ROWS; r++) {
+    for (let c=0; c<COLS; c++) {
+      const g = map.ground[r][c];
+      if (g==='O'||g==='D') { walkGrid[r][c]=false; waterGrid[r][c]=true; }
+    }
+  }
+  for (const obj of map.objects) {
+    const def = OBJECT_DEFS[obj.type];
+    if (!def) continue;
+    for (let dy=0; dy<def.th; dy++) {
+      for (let dx=0; dx<def.tw; dx++) {
+        const r=obj.ty+dy, c=obj.tx+dx;
+        if (r<ROWS && c<COLS) {
+          walkGrid[r][c] = def.walkable;
+          if (def.water) waterGrid[r][c] = true;
+        }
+      }
+    }
+  }
+  return { walkGrid, waterGrid };
+};
+
+window.LEKNES_MAP_DATA = {
+  ground: [
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','GB','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','GBu','G','G','G','G','G','G','G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','GB','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+  ],
+  objects: [
+    // Mountain border top row
+    {type:'mountain-forest',tx:0, ty:0},{type:'mountain-forest',tx:3, ty:0},
+    {type:'mountain-forest',tx:6, ty:0},{type:'mountain-forest',tx:9, ty:0},
+    {type:'mountain-forest',tx:12,ty:0},{type:'mountain-forest',tx:15,ty:0},
+    {type:'mountain-forest',tx:22,ty:0},
+    // Mountain border bottom row
+    {type:'mountain-forest',tx:0, ty:17},{type:'mountain-forest',tx:3, ty:17},
+    {type:'mountain-forest',tx:6, ty:17},{type:'mountain-forest',tx:9, ty:17},
+    {type:'mountain-forest',tx:12,ty:17},{type:'mountain-forest',tx:15,ty:17},
+    {type:'mountain-forest',tx:22,ty:17},
+    // Mountain border left column
+    {type:'mountain-forest',tx:0,ty:3},{type:'mountain-forest',tx:0,ty:6},
+    {type:'mountain-forest',tx:0,ty:9},{type:'mountain-forest',tx:0,ty:12},
+    {type:'mountain-forest',tx:0,ty:15},
+    // Mountain border right column
+    {type:'mountain-forest',tx:22,ty:3},{type:'mountain-forest',tx:22,ty:6},
+    {type:'mountain-forest',tx:22,ty:9},{type:'mountain-forest',tx:22,ty:12},
+    {type:'mountain-forest',tx:22,ty:15},
+    // Buildings
+    {type:'shop',   tx:3, ty:4},
+    {type:'cabin1', tx:9, ty:4},
+    {type:'cabin2', tx:3, ty:11},
+    // Trees
+    {type:'tree1',tx:15,ty:3},
+    {type:'tree2',tx:14,ty:3},
+    {type:'tree1',tx:15,ty:7},
+    {type:'tree2',tx:15,ty:14},
+    {type:'tree1',tx:18,ty:4},
+    {type:'tree2',tx:19,ty:8},
+    {type:'tree1',tx:18,ty:12},
+    {type:'tree2',tx:19,ty:16},
+    // Lake
+    {type:'lake',       tx:9, ty:11},
+    // Ferry zone
+    {type:'ferry-zone', tx:9, ty:14},
+  ],
+};
+
+window.HENNINGSVAER_MAP_DATA = {
+  ground: [
+    ['D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','B','B','B','B','B','B','B','B','B','B','B','B','B','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','GR','G','G','G','G','G','G','G','GB','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','G','G','GBu','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','GR','G','G','G','G','G','G','G','G','GB','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','B','B','B','B','B','B','B','B','B','B','B','B','B','G','G','G','G','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D'],
+  ],
+  objects: [
+    // Mountain wall on right
+    {type:'mountain-forest',tx:17,ty:4},
+    {type:'mountain-forest',tx:17,ty:7},
+    {type:'mountain-forest',tx:17,ty:10},
+    // Cabin
+    {type:'cabin1',tx:7,ty:6},
+    // Ferry zone on west coast
+    {type:'ferry-zone',tx:2,ty:8},
+  ],
+};
+
+window.KAKERN_MAP_DATA = {
+  ground: [
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','GB','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','GBu','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','D','D','D','D','D','D','D','D','D','D','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','GB','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','GBu','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+  ],
+  objects: [
+    // Top mountain border
+    {type:'mountain-forest',tx:0, ty:0},{type:'mountain-forest',tx:3, ty:0},
+    {type:'mountain-forest',tx:6, ty:0},{type:'mountain-forest',tx:9, ty:0},
+    {type:'mountain-forest',tx:12,ty:0},{type:'mountain-forest',tx:15,ty:0},
+    {type:'mountain-forest',tx:22,ty:0},
+    // Bottom mountain border
+    {type:'mountain-forest',tx:0, ty:17},{type:'mountain-forest',tx:3, ty:17},
+    {type:'mountain-forest',tx:6, ty:17},{type:'mountain-forest',tx:9, ty:17},
+    {type:'mountain-forest',tx:12,ty:17},{type:'mountain-forest',tx:15,ty:17},
+    {type:'mountain-forest',tx:22,ty:17},
+    // Cabin above ocean
+    {type:'cabin1',tx:3,ty:3},
+    // Cabin below ocean
+    {type:'cabin2',tx:3,ty:12},
+    // Trees top section
+    {type:'tree1',tx:16,ty:4},
+    {type:'tree2',tx:16,ty:6},
+    // Trees bottom section
+    {type:'tree1',tx:16,ty:13},
+    {type:'tree2',tx:16,ty:15},
+    // Ferry zone at south edge of top land
+    {type:'ferry-zone',tx:14,ty:3},
+  ],
+};
+
+window.KVALVIKA_MAP_DATA = {
+  ground: [
+    ['D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','O','O','B','B','B','B','B','B','B','B','B','B','O','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','O','O','B','BR','B','B','B','B','B','BB','B','B','O','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','O','B','B','B','B','B','B','B','B','B','B','B','B','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','B','B','B','BBu','B','B','B','B','B','B','B','B','B','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','B','B','B','B','B','B','B','B','B','B','B','B','B','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','B','BR','B','B','B','B','B','B','B','BB','B','B','B','O','O','O','O','O','O','O','O','O'],
+    ['G','G','G','B','B','B','B','B','B','B','B','B','B','B','B','B','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','B','B','B','B','B','B','B','B','B','B','B','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','B','B','B','B','B','B','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','GR','G','G','G','G','G','G','G','G','GBu','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','GB','G','G','G','G','G','G','G','G','GR','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+    ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
+  ],
+  objects: [
+    // Mountain-beach on left side (rows 4–12)
+    {type:'mountain-beach',tx:0,ty:4},
+    {type:'mountain-beach',tx:0,ty:7},
+    {type:'mountain-beach',tx:0,ty:10},
+    // Mountain-forest bottom border
+    {type:'mountain-forest',tx:0, ty:17},{type:'mountain-forest',tx:3, ty:17},
+    {type:'mountain-forest',tx:6, ty:17},{type:'mountain-forest',tx:9, ty:17},
+    {type:'mountain-forest',tx:12,ty:17},{type:'mountain-forest',tx:15,ty:17},
+    {type:'mountain-forest',tx:22,ty:17},
+    // Lake in beach zone
+    // Ferry zone near upper shoreline
+    {type:'ferry-zone', tx:6, ty:4},
+    {type:'mountain-forest',tx:20,ty:17},
+    {type:'mountain-forest',tx:22,ty:17},
+  ],
+};
+
+window.REINE_MAP_DATA = {
+  ground: [
+    ['D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D'],
+    ['D','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','G','G','G','G','G','G','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','G','GR','G','G','G','G','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','G','G','G','G','G','G','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','G','G','G','G','G','G','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','G','G','G','G','G','G','G','G','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','G','GB','G','G','G','G','G','G','G','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','G','G','G','GR','G','G','G','G','G','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','O','G','G','G','G','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','D','O','O','O','O','D'],
+    ['D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D','D'],
+  ],
+  objects: [
+    // NW island cabin
+    {type:'cabin1',tx:3,ty:2},
+    // Central island cabin
+    {type:'cabin2',tx:10,ty:8},
+    // Tree2 (sparse)
+    {type:'tree2',tx:8,ty:3},
+    {type:'tree2',tx:16,ty:12},
+    // Ferry zone on NW island edge
+    {type:'ferry-zone',tx:8,ty:6},
+    // Island rocks in ocean
+    {type:'island-rock',tx:1, ty:7},
+    {type:'island-rock',tx:15,ty:2},
+    {type:'island-rock',tx:4, ty:13},
+    {type:'island-rock',tx:16,ty:9},
+  ],
+};
+
+// NPC sprite keys by index
+window.NPC_KEYS = ['ow2','ow3','ow4','ow5','ow6','ow7','ow8','ow9','ow10'];
+
+window.getRandomFish = function(location, hasBoat) {
+  const fishList = GAME_DATA.FISH_BY_LOCATION[location] || GAME_DATA.FISH_BY_LOCATION.leknes;
+  const available = fishList.filter(f => !f.requiresBoat || hasBoat);
+  const weights = GAME_DATA.RARITY_WEIGHTS;
+  const pool = [];
+  available.forEach(f => { for(let i=0;i<(weights[f.rarity]||10);i++) pool.push(f); });
+  if (!pool.length) return null;
+  const fish = pool[Math.floor(Math.random()*pool.length)];
+  let weight = Phaser.Math.Between(fish.minW, fish.maxW);
+  if (!hasBoat) weight = Math.min(weight, 20);
+  return { ...fish, weight };
+};
+
+window.generateMathProblem = function(fishWeight, playerLevel) {
+  const diff = Math.min(Math.floor((fishWeight/10) + (playerLevel/5)), 4);
+  let answer, question;
+  if (diff === 0) { const a=Phaser.Math.Between(1,20),b=Phaser.Math.Between(1,20); answer=a+b; question=`${a} + ${b} = ?`; }
+  else if (diff === 1) { const a=Phaser.Math.Between(10,50),b=Phaser.Math.Between(1,a); answer=a-b; question=`${a} - ${b} = ?`; }
+  else if (diff === 2) { const a=Phaser.Math.Between(2,12),b=Phaser.Math.Between(2,12); answer=a*b; question=`${a} x ${b} = ?`; }
+  else if (diff === 3) { const b=Phaser.Math.Between(2,12),a=b*Phaser.Math.Between(2,12); answer=a/b; question=`${a} / ${b} = ?`; }
+  else { const a=Phaser.Math.Between(2,9),b=Phaser.Math.Between(2,9),c=Phaser.Math.Between(1,20); answer=(a*b)+c; question=`(${a}x${b})+${c} = ?`; }
+  return { question, answer };
+};
+
+window.addXP = function(state, amount) {
+  state.xp += amount;
+  let leveled = false;
+  while (state.xp >= GAME_DATA.XP_PER_LEVEL) { state.xp -= GAME_DATA.XP_PER_LEVEL; state.level++; leveled=true; }
+  return leveled;
+};

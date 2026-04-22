@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  Fisherman: Lofoten
+  © 2026 Eichstaedt Ikke Musikk — All rights reserved.
+  Created by Alex William Eichstaedt (Norway)
+  https://ikke-musikk.no
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="author" content="Alex William Eichstaedt">
+  <meta name="description" content="Fisherman: Lofoten — A Norwegian Adventure. Catch legendary fish, explore the Lofoten Islands, and win the Grand Fishing Tournament.">
+  <title>Fisherman: Lofoten</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a1a;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas { display: block; image-rendering: pixelated; }
+
+    /* Desktop: game fills the full viewport */
+    #game-container {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Controls panel — hidden on desktop, shown by mobile-controls.js */
+    #controls-panel {
+      display: none;
+      width: 100%;
+      position: relative;
+      background: #0d1117;
+      border-top: 2px solid #1e3a5f;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+  <div id="controls-panel"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/scenes/BootScene.js"></script>
+  <script src="js/scenes/CharacterSelectScene.js"></script>
+  <script src="js/scenes/UIScene.js"></script>
+  <script src="js/scenes/FishingScene.js"></script>
+  <script src="js/scenes/LeknesScene.js"></script>
+  <script src="js/scenes/ReineScene.js"></script>
+  <script src="js/scenes/KakernScene.js"></script>
+  <script src="js/scenes/KvalvikaScene.js"></script>
+  <script src="js/scenes/HenningsvaarScene.js?v=2"></script>
+  <script src="js/scenes/TournamentScene.js"></script>
+  <script src="js/scenes/TromsoScene.js"></script>
+  <script src="js/encounter.js"></script>
+  <script src="js/scenes/FlagQuizScene.js"></script>
+  <script src="js/scenes/SkilpaddeScene.js"></script>
+  <script src="js/scenes/BirdWatchingScene.js"></script>
+  <script src="js/scenes/SnowballFightScene.js"></script>
+  <script src="js/drag-catch.js"></script>
+  <script src="js/mobile-controls.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
