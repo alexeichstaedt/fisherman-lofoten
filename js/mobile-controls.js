@@ -123,7 +123,7 @@
     'left', 'center', 'right',
     null, 'down', null,
   ];
-  const arrows = { up: '▲', down: '▼', left: '◀', right: '▶' };
+  const arrows = { up: '↑', down: '↓', left: '←', right: '→' };
   dpadDefs.forEach(dir => {
     const cell = document.createElement('div');
     if (!dir) {
@@ -138,7 +138,7 @@
       cell.style.cssText = `
         width:14vw; height:14vw;
         display:flex; align-items:center; justify-content:center;
-        font-size:18px; color:#fff; font-weight:bold;
+        font-size:22px; color:#fff; font-weight:bold;
         background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.2);
         border-radius:8px; touch-action:none;
         -webkit-user-select:none; user-select:none;
@@ -169,7 +169,7 @@
   // G is a no-op when no animal follows, so combining is safe.
   const btnStart = rectBtn('START', 'rgba(255,255,255,0.18)', `
     width:20vw; height:8vw; font-size:11px;
-    left:50%; bottom:18%; transform:translateX(-50%);`);
+    left:50%; bottom:calc(30% + 8vw); transform:translateX(-50%);`);
   btnStart.addEventListener('pointerdown', e => {
     e.preventDefault();
     fireDown('start'); setTimeout(() => fireUp('start'), 80);
@@ -180,25 +180,24 @@
   // ── Radio buttons (T = station, R = next song) ────────────────────────────
   const btnStation = rectBtn('📻 STN', 'rgba(251,191,36,0.50)', `
     width:22vw; height:8vw; font-size:10px;
-    right:4vw; bottom:30%;`);
+    right:4vw; bottom:calc(30% + 8vw);`);
   bindTap(btnStation, 'radio');
   controlsPanel.appendChild(btnStation);
 
   const btnSong = rectBtn('⏭ SONG', 'rgba(147,197,253,0.45)', `
     width:22vw; height:8vw; font-size:10px;
-    right:4vw; bottom:18%;`);
+    left:4vw; bottom:calc(30% + 8vw);`);
   bindTap(btnSong, 'skip');
   controlsPanel.appendChild(btnSong);
 
-  // ── Numpad overlay (shown during fishing math phase) ─────────────────────
+  // ── Numpad overlay (replaces D-pad during fishing math phase) ──────────────
+  // Positioned identically to D-pad (left:4vw; top:10%) to sit in the same space.
   const numpad = document.createElement('div');
   numpad.id = 'mobile-numpad';
   numpad.style.cssText = `
-    position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%);
-    display: none; grid-template-columns: repeat(3, 20vw);
-    gap: 6px; padding: 10px; border-radius: 16px;
-    background: rgba(0,0,0,0.92); pointer-events: all;
-    z-index: 10001; touch-action: none;`;
+    position: absolute; left: 4vw; top: 10%;
+    display: none; grid-template-columns: repeat(3, 13vw); grid-template-rows: repeat(4, 10vw);
+    gap: 2px; pointer-events: all; z-index: 10001; touch-action: none;`;
 
   const numpadKeys = [
     { label: '7', key: '7', keyCode: 55 },
@@ -222,9 +221,8 @@
     const b = document.createElement('div');
     b.innerHTML = label;
     b.style.cssText = `
-      width:20vw; height:12vw; max-height:52px;
       display:flex; align-items:center; justify-content:center;
-      font-size:22px; font-family:monospace; font-weight:bold; color:#fff;
+      font-size:20px; font-family:monospace; font-weight:bold; color:#fff;
       background:${bg}; border:2px solid rgba(255,255,255,0.2); border-radius:10px;
       touch-action:none; user-select:none; cursor:pointer;`;
     b.addEventListener('pointerdown', e => {
@@ -235,49 +233,57 @@
   });
   controlsPanel.appendChild(numpad);
 
-  // ── Skilpadde (word game) alphabet keyboard ───────────────────────────
-  // Shows when the Skilpadde word-guessing game is active.
-  // D-pad (← → to move slot cursor) + A (SPACE kick) + START (Enter submit) remain visible.
-  // Only letter input buttons are added here; radio/fish buttons are hidden.
+  // ── Skilpadde alphabet keyboard (replaces D-pad + spans full width) ─────────
+  // D-pad is hidden; ← → cursor and ✓ confirm are built into the keyboard's
+  // bottom row so the player can still navigate letter slots.
   const alphaKeyboard = document.createElement('div');
   alphaKeyboard.id = 'mobile-alpha-keyboard';
   alphaKeyboard.style.cssText = `
-    position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%);
-    display: none; z-index: 10001; touch-action: none;`;
+    position: absolute; left: 1vw; top: 6%;
+    display: none; flex-direction: column; gap: 3px;
+    z-index: 10001; touch-action: none; width: 98vw;`;
 
+  // 3 QWERTY rows + 4th row with ← cursor, → cursor, ✓ confirm
   const alphaRows = [
     ['Q','W','E','R','T','Y','U','I','O','P'],
     ['A','S','D','F','G','H','J','K','L','⌫'],
     ['Z','X','C','V','B','N','M','Æ','Ø','Å'],
+    ['←','→','✓'],
   ];
-  alphaRows.forEach(row => {
+  alphaRows.forEach((row, rowIdx) => {
     const rowDiv = document.createElement('div');
-    rowDiv.style.cssText = 'display:flex; justify-content:center; gap:2px; margin-bottom:3px;';
+    const isNavRow = rowIdx === 3;
+    rowDiv.style.cssText = 'display:flex; justify-content:center; gap:2px;';
     row.forEach(ltr => {
-      const isDel = ltr === '⌫';
-      const isNO  = ['Æ','Ø','Å'].includes(ltr);
-      const bg = isDel ? 'rgba(239,68,68,0.75)' : isNO ? 'rgba(251,191,36,0.65)' : 'rgba(255,255,255,0.18)';
+      const isDel  = ltr === '⌫';
+      const isNO   = ['Æ','Ø','Å'].includes(ltr);
+      const isNav  = ['←','→'].includes(ltr);
+      const isConf = ltr === '✓';
+      const bg = isDel  ? 'rgba(239,68,68,0.75)'    :
+                 isConf ? 'rgba(74,222,128,0.85)'    :
+                 isNav  ? 'rgba(59,130,246,0.70)'    :
+                 isNO   ? 'rgba(251,191,36,0.65)'    :
+                          'rgba(255,255,255,0.18)';
       const b = document.createElement('div');
       b.innerHTML = ltr;
+      // Nav row keys are wider; regular keys fill 10-per-row
+      const w = isNavRow ? '30vw' : 'calc((98vw - 18px) / 10)';
       b.style.cssText = `
-        width:8.5vw; height:9vw; max-height:38px;
+        width:${w}; height:9vw; max-height:44px;
         display:flex; align-items:center; justify-content:center;
-        font-size:14px; font-family:monospace; font-weight:bold; color:#fff;
+        font-size:${isNavRow ? '18px' : '14px'}; font-family:monospace; font-weight:bold; color:#fff;
         background:${bg}; border:1px solid rgba(255,255,255,0.2); border-radius:6px;
         touch-action:none; user-select:none; cursor:pointer;`;
       b.addEventListener('pointerdown', e => {
         e.preventDefault();
-        if (isDel) {
-          fireKey({ key:'Backspace', keyCode:8, code:'Backspace', bubbles:true, cancelable:true });
-        } else if (ltr === 'Æ') {
-          fireKey({ key:'1', keyCode:49, code:'Digit1', bubbles:true, cancelable:true });
-        } else if (ltr === 'Ø') {
-          fireKey({ key:'2', keyCode:50, code:'Digit2', bubbles:true, cancelable:true });
-        } else if (ltr === 'Å') {
-          fireKey({ key:'3', keyCode:51, code:'Digit3', bubbles:true, cancelable:true });
-        } else {
-          fireKey({ key:ltr.toLowerCase(), keyCode:ltr.charCodeAt(0), code:'Key'+ltr, bubbles:true, cancelable:true });
-        }
+        if (isDel)       fireKey({ key:'Backspace', keyCode:8,  code:'Backspace', bubbles:true, cancelable:true });
+        else if (ltr==='←') fireKey({ key:'ArrowLeft',  keyCode:37, code:'ArrowLeft',  bubbles:true, cancelable:true });
+        else if (ltr==='→') fireKey({ key:'ArrowRight', keyCode:39, code:'ArrowRight', bubbles:true, cancelable:true });
+        else if (ltr==='✓') fireKey({ key:'Enter', keyCode:13, code:'Enter', bubbles:true, cancelable:true });
+        else if (ltr==='Æ') fireKey({ key:'1', keyCode:49, code:'Digit1', bubbles:true, cancelable:true });
+        else if (ltr==='Ø') fireKey({ key:'2', keyCode:50, code:'Digit2', bubbles:true, cancelable:true });
+        else if (ltr==='Å') fireKey({ key:'3', keyCode:51, code:'Digit3', bubbles:true, cancelable:true });
+        else fireKey({ key:ltr.toLowerCase(), keyCode:ltr.charCodeAt(0), code:'Key'+ltr, bubbles:true, cancelable:true });
       });
       rowDiv.appendChild(b);
     });
@@ -285,30 +291,24 @@
   });
   controlsPanel.appendChild(alphaKeyboard);
 
-  // Public API for FishingScene
-  window.showMobileNumpad = () => {
-    numpad.style.display = 'grid';
-    // Hide regular buttons while numpad is shown
-    [btnA, btnB, btnFish, btnStart, btnStation, btnSong, dpad]
-      .forEach(el => { el._savedDisplay = el.style.display; el.style.display = 'none'; });
-  };
-  window.hideMobileNumpad = () => {
-    numpad.style.display = 'none';
-    [btnA, btnB, btnFish, btnStart, btnStation, btnSong, dpad]
-      .forEach(el => { el.style.display = el._savedDisplay || ''; });
-  };
+  // ── Panel mode: 'dpad' | 'numpad' | 'alpha' ─────────────────────────────
+  let panelMode = 'dpad';
+  function setMode(mode) {
+    panelMode = mode;
+    dpad.style.display            = mode === 'dpad'  ? 'grid'  : 'none';
+    numpad.style.display          = mode === 'numpad' ? 'grid'  : 'none';
+    alphaKeyboard.style.display   = mode === 'alpha'  ? 'flex'  : 'none';
+    // During alpha mode, hide fish/radio/song buttons (keyboard covers that area)
+    const hideForAlpha = mode === 'alpha';
+    [btnFish, btnStation, btnSong].forEach(el => {
+      el.style.display = hideForAlpha ? 'none' : '';
+    });
+  }
 
-  // Public API for SkilpaddeScene — shows alphabet keyboard, hides radio/fish buttons
-  window.showMobileSkilpaddeKeyboard = () => {
-    alphaKeyboard.style.display = 'block';
-    [btnFish, btnStation, btnSong].forEach(el => {
-      el._savedDisplay3 = el.style.display; el.style.display = 'none';
-    });
-  };
-  window.hideMobileSkilpaddeKeyboard = () => {
-    alphaKeyboard.style.display = 'none';
-    [btnFish, btnStation, btnSong].forEach(el => {
-      el.style.display = el._savedDisplay3 || '';
-    });
-  };
+  // Public API
+  window.showMobileNumpad  = () => setMode('numpad');
+  window.hideMobileNumpad  = () => setMode('dpad');
+
+  window.showMobileSkilpaddeKeyboard = () => setMode('alpha');
+  window.hideMobileSkilpaddeKeyboard = () => setMode('dpad');
 })();
