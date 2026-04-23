@@ -55,27 +55,12 @@ window.UIScene = class extends Phaser.Scene {
     this.rKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.tKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
 
-    // Audio player for radio
-    this._radioAudio = new Audio();
-    this._radioAudio.volume = 0.6;
-    this._radioAudio.addEventListener('ended', () => this._cycleRadioSong(1));
-    this._radioAudio.addEventListener('error', () => {
-      // File not found — skip to next song silently
-      this.time.delayedCall(300, () => this._cycleRadioSong(1));
-    });
-
     this.updateDisplay();
 
     // Initialize radio visibility
     this._updateRadioDial();
 
-    // Always start default BGM; radio unlocks additional stations
-    this._playCurrentRadioSong();
-
-    this.game.events.on('updateUI', state => {
-      this.state = state;
-      this.updateDisplay();
-    });
+    this.game.events.on('updateUI', state => { this.state = state; this.updateDisplay(); });
     this.game.events.on('levelUp', lvl => {
       const t = this.add.text(400, 300, 'LEVEL UP! ' + lvl, {fontSize:'32px',color:'#ffff00',stroke:'#000000',strokeThickness:5}).setOrigin(0.5).setDepth(200);
       this.tweens.add({targets:t, y:200, alpha:0, duration:2000, onComplete:()=>t.destroy()});
@@ -124,10 +109,14 @@ window.UIScene = class extends Phaser.Scene {
 
   _getRadioStations() {
     const s = this.state || {};
-    // Station 0: My Records — all owned records as a playlist
+    // Station 0: Default BGM (single track)
+    const stations = [{ name: 'Default BGM', songs: ['Default BGM'] }];
+    // Station 1: My Records — all owned records as a playlist
     const records = s.ownedRecords || [];
-    const stations = [{ name: 'My Records', songs: [...records] }];
-    // Additional stations: each made album
+    if (records.length > 0) {
+      stations.push({ name: 'My Records', songs: [...records] });
+    }
+    // Stations 2-4: each made album (up to 3)
     (s.myAlbums || []).forEach(album => {
       stations.push({ name: album.title, songs: album.tracks || [] });
     });
@@ -136,63 +125,40 @@ window.UIScene = class extends Phaser.Scene {
 
   _updateRadioDial() {
     const s = this.state || {};
-    const stations = this._getRadioStations();
-    const stIdx  = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
-    this.radioIcon.setVisible(true);
-    this.radioStText.setVisible(true).setText(stations[stIdx].name.length > 13 ? stations[stIdx].name.slice(0, 12) + '…' : stations[stIdx].name);
+    const visible = !!s.hasRadio;
+    this.radioIcon.setVisible(visible);
+    this.radioStText.setVisible(visible);
     this.radioSongText.setVisible(false);
     this.radioHint.setVisible(false);
+    if (visible) {
+      const stations = this._getRadioStations();
+      const stIdx   = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
+      const stName  = stations[stIdx].name;
+      // Truncate to fit within the 87px text area (~13 chars at monospace 10px)
+      this.radioStText.setText(stName.length > 13 ? stName.slice(0, 12) + '…' : stName);
+    }
   }
 
   _cycleStation(dir) {
     const s = this.state;
-    if (!s) return;
+    if (!s || !s.hasRadio) return;
     const stations = this._getRadioStations();
-    if (stations.length <= 1) return;
-    s.radioStation   = ((s.radioStation || 0) + dir + stations.length) % stations.length;
-    s.radioSongIndex = 0;
+    s.radioStation    = ((s.radioStation || 0) + dir + stations.length) % stations.length;
+    s.radioSongIndex  = 0;
     SaveSystem.save(s);
     this._updateRadioDial();
-    this._playCurrentRadioSong();
   }
 
   _cycleRadioSong(dir) {
     const s = this.state;
-    if (!s) return;
+    if (!s || !s.hasRadio) return;
     const stations = this._getRadioStations();
-    const stIdx  = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
-    const songs  = stations[stIdx].songs || [];
+    const stIdx   = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
+    const songs   = stations[stIdx].songs || [];
     if (songs.length === 0) return;
     s.radioSongIndex = ((s.radioSongIndex || 0) + dir + songs.length) % songs.length;
     SaveSystem.save(s);
     this._updateRadioDial();
-    this._playCurrentRadioSong();
-  }
-
-  _songSlug(title) {
-    return title.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .trim()
-      .replace(/\s+/g, '-');
-  }
-
-  _playCurrentRadioSong() {
-    const s = this.state;
-    if (!s || !this._radioAudio) return;
-    const stations = this._getRadioStations();
-    const stIdx  = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
-    const songs  = stations[stIdx].songs || [];
-    if (songs.length === 0) return;
-    const idx   = Math.max(0, Math.min(s.radioSongIndex || 0, songs.length - 1));
-    const title = songs[idx];
-    const slug  = this._songSlug(title);
-    const src   = `assets/music/${slug}.mp3`;
-
-    this.radioSongText.setText('♪ ' + (title.length > 16 ? title.slice(0, 15) + '…' : title)).setVisible(true);
-    this.radioHint.setVisible(true);
-
-    this._radioAudio.src = src;
-    this._radioAudio.play().catch(() => {});
   }
 
   endTournament() {
@@ -203,13 +169,11 @@ window.UIScene = class extends Phaser.Scene {
     const playerBest = this.state.tournamentBestFish;
     const playerWeight = playerBest ? playerBest.weight : 0;
 
-    // Generate 4 rival catches — mostly 10-200kg, occasionally up to 500kg
-    const allNames = ['Erik', 'Lars', 'Bjørn', 'Ingrid', 'Astrid', 'Olaf', 'Sigrid', 'Magnus', 'Freya', 'Gunnar'];
+    // Generate 9 rivals with random catches between 40–400 kg
+    const allNames = ['Erik','Lars','Bjørn','Ingrid','Astrid','Olaf','Sigrid','Magnus','Freya','Gunnar','Kari','Tor','Helga','Leif','Signe'];
     const shuffled = allNames.slice().sort(() => Math.random() - 0.5);
-    const rivals = shuffled.slice(0, 4).map(name => {
-      const w = Math.random() < 0.8
-        ? Math.floor(Math.random() * 190 + 10)
-        : Math.floor(Math.random() * 300 + 200);
+    const rivals = shuffled.slice(0, 9).map(name => {
+      const w = Math.floor(Math.random() * 361) + 40; // 40–400 kg
       return { name, weight: w };
     });
 
@@ -235,8 +199,9 @@ window.UIScene = class extends Phaser.Scene {
   _showResultsOverlay(entries, playerRank, playerWon) {
     const objs = this._resultOverlayObjects;
 
-    // Background
+    // Background — tap to dismiss
     const bg = this.add.rectangle(400, 320, 800, 640, 0x000000, 0.88).setDepth(300).setScrollFactor(0);
+    bg.setInteractive().on('pointerdown', () => this._dismissResults());
     objs.push(bg);
 
     // Title
@@ -246,16 +211,16 @@ window.UIScene = class extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
     objs.push(title);
 
-    const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
+    const medals = ['🥇', '🥈', '🥉', '4.', '5.', '6.', '7.', '8.', '9.', '10.'];
     entries.forEach((entry, i) => {
-      const y = 160 + i * 56;
+      const y = 130 + i * 40;
       const medal = medals[i] || (i + 1) + '.';
-      const youTag = entry.isPlayer ? '  ← YOU' : '';
+      const youTag = entry.isPlayer ? ' ←YOU' : '';
       const fishInfo = entry.weight > 0 ? entry.weight + ' kg' : 'no catch';
       const color = entry.isPlayer ? '#fbbf24' : '#e2e8f0';
       const line = this.add.text(400, y,
-        medal + '  ' + entry.name.padEnd(12) + fishInfo + youTag,
-        { fontSize: '18px', color, fontFamily: 'monospace', stroke: '#000', strokeThickness: 3 }
+        medal.padEnd(4) + entry.name.padEnd(10) + fishInfo + youTag,
+        { fontSize: '15px', color, fontFamily: 'monospace', stroke: '#000', strokeThickness: 3 }
       ).setOrigin(0.5).setDepth(301).setScrollFactor(0);
       objs.push(line);
     });
@@ -265,15 +230,15 @@ window.UIScene = class extends Phaser.Scene {
       ? '🏆 Congrats ' + (this.state.playerName || 'Ikke Musikk') + ', you just won the Grand Fishing Tournament of Lofoten. You are King of the North!'
       : 'Rank #' + playerRank + ' — keep fishing!';
     const resultColor = playerWon ? '#4ade80' : '#94a3b8';
-    const msg = this.add.text(400, 476, resultMsg, {
+    const msg = this.add.text(400, 545, resultMsg, {
       fontSize: playerWon ? '15px' : '20px', color: resultColor, fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 3, wordWrap: { width: 560 }, align: 'center'
     }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
     objs.push(msg);
 
-    const hint = this.add.text(400, 530, 'ENTER / ESC to continue', {
+    const hint = this.add.text(400, 600, 'Tap or ENTER / ESC to continue', {
       fontSize: '13px', color: '#64748b', fontFamily: 'monospace'
-    }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+    }).setOrigin(0.5).setDepth(302).setScrollFactor(0);
     objs.push(hint);
   }
 

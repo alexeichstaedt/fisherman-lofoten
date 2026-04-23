@@ -105,9 +105,9 @@ window.KakernScene = class extends Phaser.Scene {
     const travelBg    = this.add.rectangle(0,0,400,340,0x0f172a,0.97).setStrokeStyle(2,0x4ade80);
     this.travelTitle  = this.add.text(0,-140,'Travel To...',{fontSize:'22px',color:'#4ade80',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelDests  = ['Leknes','Reine','Kvalvika','Henningsvær'];
-    this.travelTexts  = this.travelDests.map((d,i)=>this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5));
+    this.travelTexts  = this.travelDests.map((d,i)=>{ const t=this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5); t.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.travelMenuOpen) return; this.travelIndex=i; this.updateTravelCursor(); this.executeTravel(d); }); return t; });
     this.travelCursor = this.add.text(0,0,'>',{fontSize:'16px',color:'#4ade80'});
-    this.travelHint   = this.add.text(0,140,'ENTER to travel  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
+    this.travelHint   = this.add.text(0,140,'Tap or ENTER to travel  ·  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelLayer  = this.add.container(400,320).setDepth(51).setVisible(false).setScrollFactor(0);
     this.travelLayer.add([travelBg,this.travelTitle,...this.travelTexts,this.travelCursor,this.travelHint]);
     this.travelIndex  = 0;
@@ -768,7 +768,8 @@ window.KakernScene = class extends Phaser.Scene {
           const rankColor = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#b45309' : '#cbd5e1';
           const isFollowing = _followName === b.name;
           const expires = b.expiresAt ? Math.max(0, Math.round((b.expiresAt - Date.now()) / 3600000)) + 'h' : '?';
-          const label = `#${i+1}  ${b.name || 'Baddie'}  (Lv ${b.level})${isFollowing ? ' 💅' : ''}  ⏱${expires}`;
+          const flag = (window.BADDIE_FLAGS && window.BADDIE_FLAGS[b.name]) || '🌍';
+          const label = `#${i+1}  ${flag} ${b.name || 'Baddie'}  (Lv ${b.level})${isFollowing ? ' 💅' : ''}  ⏱${expires}`;
           const t = this.add.text(cx - W/2 + 20, y, label, {
             fontSize: '12px', color: rankColor, fontFamily: 'monospace'
           }).setDepth(56).setScrollFactor(0);

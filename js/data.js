@@ -1,4 +1,4 @@
-// Fisherman: Lofoten — © 2026 Eichstaedt Ikke Musikk. All rights reserved.
+// Fisherman: Lofoten — © 2026 Ikke Musikk Eichstaedt. All rights reserved.
 window.GAME_DATA = {
   OW_GENDER: { ow1:'male', ow2:'female', ow3:'female', ow4:'female', ow5:'male', ow6:'female', ow7:'male', ow8:'male', ow9:'female', ow10:'male' },
   TILE_SIZE: 32,
@@ -249,7 +249,109 @@ window.NORWEGIAN_GIRL_NAMES = [
   // Asian (10)
   'Yuki','Sakura','Mei','Aiko','Hana',
   'Lin','Asha','Priya','Nari','Soo',
+  // Swedish (10)
+  'Linnea','Alva','Elsa','Ebba','Wilma',
+  'Filippa','Klara','Britta','Lotta','Elin',
+  // Danish (10)
+  'Freja','Cecilie','Laura','Josefine','Katrine',
+  'Nanna','Mette','Tine','Rikke','Fie',
+  // Finnish (10)
+  'Aino','Aada','Emmi','Siiri','Iida',
+  'Helmi','Pilvi','Inkeri','Venla','Kaisa',
+  // German (10)
+  'Lena','Hannah','Lara','Lea','Nina',
+  'Jana','Greta','Petra','Monika','Heike',
+  // Brazilian (10)
+  'Ana','Beatriz','Fernanda','Gabriela','Juliana',
+  'Larissa','Leticia','Rafaela','Renata','Tatiana',
+  // Mexican (5)
+  'Guadalupe','Lupita','Xochitl','Citlali','Consuelo',
+  // Argentinian (5)
+  'Milagros','Rocío','Agustina','Florencia','Pilar',
+  // French (10)
+  'Amélie','Chloé','Léa','Manon','Camille',
+  'Inès','Lucie','Océane','Élodie','Céline',
+  // Icelandic (5)
+  'Guðrún','Kristín','Sigríður','Inga','Ásta',
+  // Sami (10)
+  'Máret','Ánne','Elle','Birit','Risten',
+  'Sunna','Láilá','Márit','Siri','Rávdná',
+  // Australian (5)
+  'Kylie','Zoe','Caitlin','Brooke','Ashleigh',
+  // Nigerian (10)
+  'Adaeze','Chioma','Ngozi','Amara','Chiamaka',
+  'Temi','Funmi','Bisi','Yetunde','Kemi',
+  // Greek (10)
+  'Eleni','Dimitra','Athina','Niki','Katerina',
+  'Despina','Vasiliki','Alexia','Stavroula','Chrysoula',
 ];
+
+// Flag emoji keyed by baddie name — matches the nationality groups above
+window.BADDIE_FLAGS = {
+  // Norwegian
+  'Emma':'🇳🇴','Nora':'🇳🇴','Maja':'🇳🇴','Sofie':'🇳🇴','Ingrid':'🇳🇴',
+  'Astrid':'🇳🇴','Frida':'🇳🇴','Thea':'🇳🇴','Mia':'🇳🇴','Sara':'🇳🇴',
+  'Emilie':'🇳🇴','Live':'🇳🇴','Ida':'🇳🇴','Anna':'🇳🇴','Julie':'🇳🇴',
+  'Mathilde':'🇳🇴','Silje':'🇳🇴','Karin':'🇳🇴','Solveig':'🇳🇴','Hilde':'🇳🇴',
+  'Sigrid':'🇳🇴','Tuva':'🇳🇴','Helene':'🇳🇴','Maria':'🇳🇴','Vilde':'🇳🇴',
+  'Signe':'🇳🇴','Ragnhild':'🇳🇴','Guro':'🇳🇴','Tone':'🇳🇴','Marit':'🇳🇴',
+  'Karianne':'🇳🇴','Benedikte':'🇳🇴','Toril':'🇳🇴','Bente':'🇳🇴','Anette':'🇳🇴',
+  'Kristine':'🇳🇴','Eline':'🇳🇴','Camilla':'🇳🇴','Linn':'🇳🇴','Stine':'🇳🇴',
+  'Åse':'🇳🇴','Gry':'🇳🇴','Randi':'🇳🇴','Vigdis':'🇳🇴','Brit':'🇳🇴',
+  'Inger':'🇳🇴','Bodil':'🇳🇴','Tove':'🇳🇴','Wenche':'🇳🇴','Berit':'🇳🇴',
+  // American
+  'Ashley':'🇺🇸','Brittany':'🇺🇸','Madison':'🇺🇸','Savannah':'🇺🇸','Taylor':'🇺🇸',
+  'Kayla':'🇺🇸','Hailey':'🇺🇸','Amber':'🇺🇸','Tiffany':'🇺🇸','Destiny':'🇺🇸',
+  // English
+  'Charlotte':'🇬🇧','Poppy':'🇬🇧','Isla':'🇬🇧','Ellie':'🇬🇧','Rosie':'🇬🇧',
+  'Daisy':'🇬🇧','Imogen':'🇬🇧','Freya':'🇬🇧','Millie':'🇬🇧','Phoebe':'🇬🇧',
+  // Spanish
+  'Valentina':'🇪🇸','Lucía':'🇪🇸','Sofía':'🇪🇸','Isabella':'🇪🇸','Camila':'🇪🇸',
+  'Valeria':'🇪🇸','Martina':'🇪🇸','Paula':'🇪🇸','Elena':'🇪🇸','Natalia':'🇪🇸',
+  // Italian
+  'Giulia':'🇮🇹','Chiara':'🇮🇹','Francesca':'🇮🇹','Aurora':'🇮🇹','Beatrice':'🇮🇹',
+  'Elisa':'🇮🇹','Ginevra':'🇮🇹','Alessia':'🇮🇹','Serena':'🇮🇹','Vittoria':'🇮🇹',
+  // Asian (per-name country)
+  'Yuki':'🇯🇵','Sakura':'🇯🇵','Aiko':'🇯🇵','Hana':'🇯🇵',
+  'Mei':'🇨🇳','Lin':'🇨🇳',
+  'Asha':'🇮🇳','Priya':'🇮🇳',
+  'Nari':'🇰🇷','Soo':'🇰🇷',
+  // Swedish
+  'Linnea':'🇸🇪','Alva':'🇸🇪','Elsa':'🇸🇪','Ebba':'🇸🇪','Wilma':'🇸🇪',
+  'Filippa':'🇸🇪','Klara':'🇸🇪','Britta':'🇸🇪','Lotta':'🇸🇪','Elin':'🇸🇪',
+  // Danish
+  'Freja':'🇩🇰','Cecilie':'🇩🇰','Laura':'🇩🇰','Josefine':'🇩🇰','Katrine':'🇩🇰',
+  'Nanna':'🇩🇰','Mette':'🇩🇰','Tine':'🇩🇰','Rikke':'🇩🇰','Fie':'🇩🇰',
+  // Finnish
+  'Aino':'🇫🇮','Aada':'🇫🇮','Emmi':'🇫🇮','Siiri':'🇫🇮','Iida':'🇫🇮',
+  'Helmi':'🇫🇮','Pilvi':'🇫🇮','Inkeri':'🇫🇮','Venla':'🇫🇮','Kaisa':'🇫🇮',
+  // German
+  'Lena':'🇩🇪','Hannah':'🇩🇪','Lara':'🇩🇪','Lea':'🇩🇪','Nina':'🇩🇪',
+  'Jana':'🇩🇪','Greta':'🇩🇪','Petra':'🇩🇪','Monika':'🇩🇪','Heike':'🇩🇪',
+  // Brazilian
+  'Ana':'🇧🇷','Beatriz':'🇧🇷','Fernanda':'🇧🇷','Gabriela':'🇧🇷','Juliana':'🇧🇷',
+  'Larissa':'🇧🇷','Leticia':'🇧🇷','Rafaela':'🇧🇷','Renata':'🇧🇷','Tatiana':'🇧🇷',
+  // Mexican
+  'Guadalupe':'🇲🇽','Lupita':'🇲🇽','Xochitl':'🇲🇽','Citlali':'🇲🇽','Consuelo':'🇲🇽',
+  // Argentinian
+  'Milagros':'🇦🇷','Rocío':'🇦🇷','Agustina':'🇦🇷','Florencia':'🇦🇷','Pilar':'🇦🇷',
+  // French
+  'Amélie':'🇫🇷','Chloé':'🇫🇷','Léa':'🇫🇷','Manon':'🇫🇷','Camille':'🇫🇷',
+  'Inès':'🇫🇷','Lucie':'🇫🇷','Océane':'🇫🇷','Élodie':'🇫🇷','Céline':'🇫🇷',
+  // Icelandic
+  'Guðrún':'🇮🇸','Kristín':'🇮🇸','Sigríður':'🇮🇸','Inga':'🇮🇸','Ásta':'🇮🇸',
+  // Sami (Sápmi — using reindeer as there is no Unicode Sami flag)
+  'Máret':'🦌','Ánne':'🦌','Elle':'🦌','Birit':'🦌','Risten':'🦌',
+  'Sunna':'🦌','Láilá':'🦌','Márit':'🦌','Siri':'🦌','Rávdná':'🦌',
+  // Australian
+  'Kylie':'🇦🇺','Zoe':'🇦🇺','Caitlin':'🇦🇺','Brooke':'🇦🇺','Ashleigh':'🇦🇺',
+  // Nigerian
+  'Adaeze':'🇳🇬','Chioma':'🇳🇬','Ngozi':'🇳🇬','Amara':'🇳🇬','Chiamaka':'🇳🇬',
+  'Temi':'🇳🇬','Funmi':'🇳🇬','Bisi':'🇳🇬','Yetunde':'🇳🇬','Kemi':'🇳🇬',
+  // Greek
+  'Eleni':'🇬🇷','Dimitra':'🇬🇷','Athina':'🇬🇷','Niki':'🇬🇷','Katerina':'🇬🇷',
+  'Despina':'🇬🇷','Vasiliki':'🇬🇷','Alexia':'🇬🇷','Stavroula':'🇬🇷','Chrysoula':'🇬🇷',
+};
 
 window.getXPBonus = function(companion, scene) {
   if (!companion) return 1;
@@ -580,13 +682,13 @@ window.HENNINGSVAER_MAP_DATA = {
     ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
     ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
     // Rows 6-12: narrow bridge channel — O (normal ocean) not D until mountains
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
     // Rows 13-15: grass hillside connecting to harbor — O surrounds (not deep)
     ['O','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O','O','O','O','O'],
     ['O','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O','O','O','O','O'],
@@ -1024,13 +1126,13 @@ window.HENNINGSVAER_MAP_DATA = {
     ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
     ['G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G'],
     // Rows 6-12: narrow bridge channel — O (normal ocean) not D until mountains
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
-    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','GB','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
+    ['O','O','O','O','O','O','O','O','O','O','O','O','O','O','O','GB','G','GB','O','O','O','O','O','O','O','O','O','O','O','O','O','O'],
     // Rows 13-15: grass hillside connecting to harbor — O surrounds (not deep)
     ['O','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O','O','O','O'],
     ['O','O','O','O','O','O','O','O','O','G','G','G','G','G','G','G','G','G','G','G','G','G','G','G','O','O','O','O','O','O','O','O'],
@@ -1416,14 +1518,8 @@ window.addFishAuraMiss = function(state, fish, magical) {
 window.addFishAura = function(state, fish) {
   if (typeof state.aura === 'undefined') state.aura = 20;
   const isTrophy = GAME_DATA.TROPHY_FISH.includes(fish.name);
-  if (isTrophy) {
-    state.aura = Math.max(-100, Math.min(100, state.aura + 10));
-    return 10;
-  }
-  // No aura for common fish; +1 uncommon/rare; +3 legendary/secret
-  const rarityGain = { common: 0, uncommon: 1, rare: 1, legendary: 3, secret: 3 };
-  let gain = rarityGain[fish.rarity] ?? 0;
-  if (fish.magical) gain = Math.max(gain, 2); // magical Tromsø fish still give ≥ +2
+  const isMagical = !!fish.magical;
+  const gain = isTrophy ? 10 : (isMagical ? 2 : 1);
   state.aura = Math.max(-100, Math.min(100, state.aura + gain));
   return gain;
 };

@@ -1,4 +1,4 @@
-// Fisherman: Lofoten — © 2026 Eichstaedt Ikke Musikk. All rights reserved.
+// Fisherman: Lofoten — © 2026 Ikke Musikk Eichstaedt. All rights reserved.
 const _isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
                || navigator.maxTouchPoints > 0;
 

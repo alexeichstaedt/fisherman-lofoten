@@ -8,9 +8,12 @@ window.SkilpaddeScene = class SkilpaddeScene extends Phaser.Scene {
     this.charKey     = data.charKey || 'ikke-musikk';
     this.state       = data.state || null;
 
-    const words    = window.SKILPADDE_WORDS || [];
-    const dayIndex = Math.floor(Date.now() / 86400000) % words.length;
-    const entry    = words[dayIndex];
+    const words  = window.SKILPADDE_WORDS || [];
+    // Use a seeded LCG so the same word appears all day but the sequence
+    // is spread across the full list rather than cycling in order.
+    const dayNum = Math.floor(Date.now() / 86400000);
+    const seed   = (dayNum * 1664525 + 1013904223) >>> 0; // LCG, 32-bit unsigned
+    const entry  = words[seed % words.length];
     this.targetWord = entry.word;
     this.literal    = entry.literal;
     this.meaning    = entry.meaning;

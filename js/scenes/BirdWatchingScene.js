@@ -23,10 +23,10 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     this.dead          = false;
     this.started       = false;
     this.score         = 0;
-    this.speed         = 2.5;
+    this.speed         = 4;
     this.birdVY        = 0;
-    this.gravity       = 0.28;
-    this.flapPower     = -7;
+    this.gravity       = 0.5;
+    this.flapPower     = -9;
     this.clouds        = [];
     this.spawnTimer    = 0;
     this.speedTimer    = 0;
@@ -34,12 +34,11 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
 
   // Dynamic spawn interval — gets shorter as score rises
   get spawnInterval() {
-    if (this.score >= 60) return 42;
-    if (this.score >= 45) return 52;
-    if (this.score >= 30) return 65;
-    if (this.score >= 20) return 80;
-    if (this.score >= 10) return 100;
-    return 120;
+    if (this.score >= 40) return 30;
+    if (this.score >= 30) return 40;
+    if (this.score >= 20) return 55;
+    if (this.score >= 10) return 70;
+    return 85;
   }
 
   create() {
@@ -93,13 +92,23 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     }).setOrigin(1, 0).setDepth(20);
 
     // Start prompt
-    this.startTxt = this.add.text(W / 2, this.birdY - 60, '🐦 Press SPACE or ↑ to start!', {
+    this.startTxt = this.add.text(W / 2, this.birdY - 60, '🐦 Tap or SPACE or ↑ to start!', {
       fontSize: '16px', color: '#ffffff', fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 3
     }).setOrigin(0.5).setDepth(20);
 
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.upKey    = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+
+    // Touch / pointer support for mobile flapping
+    this.input.on('pointerdown', () => {
+      if (this.dead) return;
+      if (!this.started) {
+        this.started = true;
+        if (this.startTxt) { this.startTxt.destroy(); this.startTxt = null; }
+      }
+      this.birdVY = this.flapPower;
+    });
 
     // Hide the HUD while playing
     if (this.scene.isActive('UIScene')) this.scene.sleep('UIScene');
@@ -135,12 +144,12 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     if (this.bird.setFrame) this.bird.setFrame(this.birdVY < 0 ? 20 : 21);
     if (this.bird.setPosition) this.bird.setPosition(this.birdX, this.birdY);
 
-    // Speed ramp: gentle acceleration
+    // Speed ramp: accelerates faster as score climbs, higher cap
     this.speedTimer++;
-    const rampEvery = this.score >= 40 ? 300 : this.score >= 20 ? 450 : 600;
+    const rampEvery = this.score >= 40 ? 200 : this.score >= 20 ? 280 : 400;
     if (this.speedTimer % rampEvery === 0) {
-      const inc = this.score >= 40 ? 0.4 : this.score >= 20 ? 0.3 : 0.25;
-      this.speed = Math.min(this.speed + inc, 11);
+      const inc = this.score >= 40 ? 0.6 : this.score >= 20 ? 0.5 : 0.4;
+      this.speed = Math.min(this.speed + inc, 14);
     }
 
     // Spawn clouds

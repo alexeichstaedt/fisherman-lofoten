@@ -80,12 +80,22 @@ window.BootScene = class extends Phaser.Scene {
     this.menuItems = hasSave ? ['Continue','New Game'] : ['New Game'];
     this.selectedIndex = 0;
     const startY = hasSave ? 320 : 340;
-    this.menuTexts = this.menuItems.map((item, i) =>
-      this.add.text(400, startY + i*60, item, { fontSize:'32px', color: i===0?'#ffff00':'#aaaaaa', stroke:'#000000', strokeThickness:3 }).setOrigin(0.5)
-    );
+    this.menuTexts = this.menuItems.map((item, i) => {
+      const t = this.add.text(400, startY + i*60, item, {
+        fontSize:'32px', color: i===0?'#ffff00':'#aaaaaa', stroke:'#000000', strokeThickness:3
+      }).setOrigin(0.5);
+      t.setInteractive({ useHandCursor: true });
+      t.on('pointerdown', () => {
+        this.selectedIndex = i;
+        this.updateCursor();
+        this.cooldown = 300;
+        this.confirmSelection();
+      });
+      return t;
+    });
     this.cursor = this.add.text(0,0,'>', {fontSize:'24px',color:'#ffff00'});
     this.updateCursor();
-    this.add.text(400, 600, 'Up/Down Navigate   ENTER Select', { fontSize:'13px', color:'#475569' }).setOrigin(0.5);
+    this.add.text(400, 600, 'Tap to select  ·  ↑↓ + ENTER', { fontSize:'13px', color:'#475569' }).setOrigin(0.5);
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);

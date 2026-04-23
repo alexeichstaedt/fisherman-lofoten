@@ -26,7 +26,6 @@ window.ReineScene = class extends Phaser.Scene {
     this.burgerShopOpen = false;
     this.top10Open = false;
     this.marketOpen = false;
-    this._marketTabIdx = 0;
     this.restaurantOpen = false;
     this.birdTourOpen   = false;
     this.companionSprite = null;
@@ -310,9 +309,9 @@ window.ReineScene = class extends Phaser.Scene {
     const travelBg   = this.add.rectangle(0,0,400,340,0x0f172a,0.97).setStrokeStyle(2,0x4ade80);
     this.travelTitle  = this.add.text(0,-140,'Travel To...',{fontSize:'22px',color:'#4ade80',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelDests  = ['Leknes','Kåkern','Kvalvika','Henningsvær'];
-    this.travelTexts  = this.travelDests.map((d,i)=>this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5));
+    this.travelTexts  = this.travelDests.map((d,i)=>{ const t=this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5); t.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.travelMenuOpen) return; this.travelIndex=i; this.updateTravelCursor(); this.executeTravel(d); }); return t; });
     this.travelCursor = this.add.text(0,0,'>',{fontSize:'16px',color:'#4ade80'});
-    this.travelHint   = this.add.text(0,140,'ENTER to travel  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
+    this.travelHint   = this.add.text(0,140,'Tap or ENTER to travel  ·  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelLayer  = this.add.container(400,320).setDepth(51).setVisible(false).setScrollFactor(0);
     this.travelLayer.add([travelBg,this.travelTitle,...this.travelTexts,this.travelCursor,this.travelHint]);
     this.travelIndex  = 0;
@@ -456,14 +455,14 @@ window.ReineScene = class extends Phaser.Scene {
 
     if (this.marketOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.escKey)) { this.closeMarket(); return; }
-      if (Phaser.Input.Keyboard.JustDown(this.leftKey) || Phaser.Input.Keyboard.JustDown(this.rightKey)) {
-        this._marketTabIdx = 1 - this._marketTabIdx;
-        this._renderMarket(); return;
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+        this._marketTab = 1 - (this._marketTab || 0);
+        this._renderMarket();
+        return;
       }
       if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-        if (this._marketTabIdx === 0) { this._sellAllDragCatches(); }
-        else { this._buyHarpoon(); }
-        return;
+        if ((this._marketTab || 0) === 0) { this._sellAllDragCatches(); return; }
+        else { this._buyHarpoon(); return; }
       }
       return;
     }
@@ -656,8 +655,8 @@ window.ReineScene = class extends Phaser.Scene {
   }
 
   openMarket() {
-    this._marketTabIdx = 0;
     this.marketOpen = true;
+    this._marketTab = this._marketTab || 0;
     this._renderMarket();
   }
 
@@ -667,6 +666,7 @@ window.ReineScene = class extends Phaser.Scene {
 
     const W = 480, H = 380;
     const cx = 400, cy = 320;
+    const tab = this._marketTab || 0;
 
     const bg = this.add.rectangle(cx, cy, W, H, 0x0f172a, 0.97)
       .setDepth(60).setScrollFactor(0);
@@ -675,114 +675,125 @@ window.ReineScene = class extends Phaser.Scene {
     const title = this.add.text(cx, cy - H/2 + 18, '🦞 Reine Market', {
       fontSize:'15px', color:'#4ade80', fontFamily:'monospace'
     }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const divider = this.add.rectangle(cx, cy - H/2 + 36, W - 20, 1, 0x334155)
-      .setDepth(61).setScrollFactor(0);
+    this._marketObjects.push(bg, border, title);
 
-    // Tab headers
-    const tab0Label = this._marketTabIdx === 0 ? '[ Sell Catches ]' : '  Sell Catches  ';
-    const tab1Label = this._marketTabIdx === 1 ? '[ Harpoon Shop ]' : '  Harpoon Shop  ';
-    const tabY = cy - H/2 + 52;
-    const tab0 = this.add.text(cx - 110, tabY, tab0Label, {
-      fontSize:'12px', color: this._marketTabIdx === 0 ? '#4ade80' : '#64748b', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const tab1 = this.add.text(cx + 110, tabY, tab1Label, {
-      fontSize:'12px', color: this._marketTabIdx === 1 ? '#4ade80' : '#64748b', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const tabDiv = this.add.rectangle(cx, cy - H/2 + 62, W - 20, 1, 0x334155)
-      .setDepth(61).setScrollFactor(0);
-
-    this._marketObjects.push(bg, border, title, divider, tab0, tab1, tabDiv);
-
-    if (this._marketTabIdx === 0) {
-      this._renderSellTab(cx, cy, W, H);
-    } else {
-      this._renderHarpoonTab(cx, cy, W, H);
-    }
-  }
-
-  _renderSellTab(cx, cy, W, H) {
-    const catches = this.state.dragCatches || [];
-    const contentY = cy - H/2 + 76;
-    const lineH = 26;
-
-    if (catches.length === 0) {
-      const empty = this.add.text(cx, cy, 'No drag catches yet.\nGo fishing on water with a boat!', {
-        fontSize:'13px', color:'#64748b', fontFamily:'monospace', align:'center'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      this._marketObjects.push(empty);
-    } else {
-      let totalValue = 0;
-      catches.forEach((c, i) => {
-        const rarityColor = { common:'#94a3b8', uncommon:'#4ade80', rare:'#60a5fa', legendary:'#f59e0b', secret:'#e879f9' };
-        const fish = (window.DRAG_FISH || []).find(f => f.name === c.name);
-        const col = rarityColor[fish?.rarity || 'common'];
-        const line = this.add.text(cx - W/2 + 20, contentY + i * lineH,
-          `${c.name}  x${c.count}  ${c.totalWeight}kg  →  ${c.totalValue.toLocaleString()} NOK`,
-          { fontSize:'12px', color: col, fontFamily:'monospace' }
-        ).setDepth(61).setScrollFactor(0);
-        this._marketObjects.push(line);
-        totalValue += c.totalValue;
-      });
-
-      const divTotal = this.add.rectangle(cx, contentY + catches.length * lineH + 8, W - 20, 1, 0x334155)
+    // ── Tab headers ──
+    const tabY = cy - H/2 + 40;
+    const tabNames = ['💰 Sell Catches', '🔱 Harpoon'];
+    tabNames.forEach((name, i) => {
+      const tabX = cx - 100 + i * 200;
+      const active = i === tab;
+      const tabBg = this.add.rectangle(tabX, tabY, 180, 22,
+        active ? 0x166534 : 0x1e293b, active ? 0.9 : 0.7)
         .setDepth(61).setScrollFactor(0);
-      const totalText = this.add.text(cx - W/2 + 20, contentY + catches.length * lineH + 16,
-        `TOTAL:  ${totalValue.toLocaleString()} NOK`,
-        { fontSize:'13px', color:'#fef08a', fontFamily:'monospace' }
-      ).setDepth(61).setScrollFactor(0);
-      this._marketObjects.push(divTotal, totalText);
+      const tabTxt = this.add.text(tabX, tabY, name, {
+        fontSize:'11px', color: active ? '#4ade80' : '#64748b', fontFamily:'monospace'
+      }).setOrigin(0.5).setDepth(62).setScrollFactor(0);
+      // Touch support: click tab to switch
+      tabBg.setInteractive().on('pointerdown', () => {
+        this._marketTab = i; this._renderMarket();
+      });
+      this._marketObjects.push(tabBg, tabTxt);
+    });
+
+    const divider = this.add.rectangle(cx, cy - H/2 + 52, W - 20, 1, 0x334155)
+      .setDepth(61).setScrollFactor(0);
+    this._marketObjects.push(divider);
+
+    const contentY = cy - H/2 + 68;
+
+    // ── Tab 0: Sell Catches ──
+    if (tab === 0) {
+      const catches = this.state.dragCatches || [];
+      const lineH = 26;
+      if (catches.length === 0) {
+        const empty = this.add.text(cx, cy + 10, 'No drag catches yet.\nGo fishing on water with a boat!', {
+          fontSize:'13px', color:'#64748b', fontFamily:'monospace', align:'center'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        this._marketObjects.push(empty);
+      } else {
+        let totalValue = 0;
+        catches.forEach((c, i) => {
+          const rarityColor = { common:'#94a3b8', uncommon:'#4ade80', rare:'#60a5fa', legendary:'#f59e0b', secret:'#e879f9' };
+          const fish = (window.DRAG_FISH || []).find(f => f.name === c.name);
+          const col = rarityColor[fish?.rarity || 'common'];
+          const line = this.add.text(cx - W/2 + 20, contentY + i * lineH,
+            `${c.name}  x${c.count}  ${c.totalWeight}kg  →  ${c.totalValue.toLocaleString()} NOK`,
+            { fontSize:'12px', color: col, fontFamily:'monospace' }
+          ).setDepth(61).setScrollFactor(0);
+          this._marketObjects.push(line);
+          totalValue += c.totalValue;
+        });
+        const divTotal = this.add.rectangle(cx, contentY + catches.length * lineH + 8, W - 20, 1, 0x334155)
+          .setDepth(61).setScrollFactor(0);
+        const totalText = this.add.text(cx - W/2 + 20, contentY + catches.length * lineH + 16,
+          `TOTAL:  ${totalValue.toLocaleString()} NOK`,
+          { fontSize:'13px', color:'#fef08a', fontFamily:'monospace' }
+        ).setDepth(61).setScrollFactor(0);
+        this._marketObjects.push(divTotal, totalText);
+      }
+      const hint = this.add.text(cx, cy + H/2 - 22,
+        catches.length > 0 ? 'ENTER sell all  |  ◄► switch tab  |  ESC close'
+                           : '◄► switch tab  |  ESC close',
+        { fontSize:'10px', color:'#64748b', fontFamily:'monospace' }
+      ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      this._marketObjects.push(hint);
     }
 
-    const hint = this.add.text(cx, cy + H/2 - 22,
-      catches.length > 0 ? '◀ ▶ switch tab  |  ENTER sell all  |  ESC close' : '◀ ▶ switch tab  |  ESC close',
-      { fontSize:'10px', color:'#64748b', fontFamily:'monospace' }
-    ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    this._marketObjects.push(hint);
-  }
+    // ── Tab 1: Harpoon Shop ──
+    if (tab === 1) {
+      const owned = !!this.state.hasHarpoon;
+      this.add.nothing; // no-op placeholder
 
-  _renderHarpoonTab(cx, cy, W, H) {
-    const state = this.state;
-    const owned = !!state.hasHarpoon;
-    const canAfford = state.money >= 4000;
+      const icon = this.add.text(cx, contentY + 30, '🔱', { fontSize:'48px' })
+        .setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      const name = this.add.text(cx, contentY + 90, 'Harpoon', {
+        fontSize:'20px', color:'#38bdf8', fontFamily:'monospace'
+      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      const desc = this.add.text(cx, contentY + 118,
+        'Auto-catch any fish over 50kg.\nSingle use — one per player.',
+        { fontSize:'12px', color:'#94a3b8', fontFamily:'monospace', align:'center' }
+      ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      this._marketObjects.push(icon, name, desc);
 
-    const icon = this.add.text(cx, cy - 60, '🔱', { fontSize:'36px' })
-      .setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const nameText = this.add.text(cx, cy - 10, 'Harpoon', {
-      fontSize:'16px', color:'#f0abfc', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const priceText = this.add.text(cx, cy + 20, '4,000 NOK', {
-      fontSize:'14px', color:'#fef08a', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    const descText = this.add.text(cx, cy + 50,
-      'Auto-catch any fish over 100 kg.\nOne time use. Only one at a time.',
-      { fontSize:'12px', color:'#94a3b8', fontFamily:'monospace', align:'center' }
-    ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      if (owned) {
+        const ownedTxt = this.add.text(cx, contentY + 165, '✅ You own a harpoon', {
+          fontSize:'14px', color:'#4ade80', fontFamily:'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        this._marketObjects.push(ownedTxt);
+      } else {
+        const price = this.add.text(cx, contentY + 160, '4,000 NOK', {
+          fontSize:'18px', color:'#fbbf24', fontFamily:'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        const canAfford = (this.state.money || 0) >= 4000;
+        // Buy button
+        const btnBg = this.add.rectangle(cx, contentY + 200, 180, 32,
+          canAfford ? 0x166534 : 0x374151, 0.9)
+          .setStrokeStyle(1, canAfford ? 0x4ade80 : 0x475569)
+          .setDepth(61).setScrollFactor(0).setInteractive();
+        const btnTxt = this.add.text(cx, contentY + 200, canAfford ? 'ENTER to Buy' : 'Not enough NOK', {
+          fontSize:'13px', color: canAfford ? '#ffffff' : '#64748b', fontFamily:'monospace'
+        }).setOrigin(0.5).setDepth(62).setScrollFactor(0);
+        if (canAfford) btnBg.on('pointerdown', () => this._buyHarpoon());
+        this._marketObjects.push(price, btnBg, btnTxt);
+      }
 
-    let statusColor, statusMsg;
-    if (owned) { statusColor = '#64748b'; statusMsg = 'You already own a harpoon.'; }
-    else if (!canAfford) { statusColor = '#ef4444'; statusMsg = `Need ${(4000 - state.money).toLocaleString()} more NOK`; }
-    else { statusColor = '#4ade80'; statusMsg = 'ENTER to buy'; }
-
-    const statusText = this.add.text(cx, cy + 95, statusMsg, {
-      fontSize:'12px', color: statusColor, fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-
-    const hint = this.add.text(cx, cy + H/2 - 22, '◀ ▶ switch tab  |  ESC close', {
-      fontSize:'10px', color:'#64748b', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-
-    this._marketObjects.push(icon, nameText, priceText, descText, statusText, hint);
+      const hint = this.add.text(cx, cy + H/2 - 22,
+        '◄► switch tab  |  ESC close',
+        { fontSize:'10px', color:'#64748b', fontFamily:'monospace' }
+      ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      this._marketObjects.push(hint);
+    }
   }
 
   _buyHarpoon() {
-    const state = this.state;
-    if (state.hasHarpoon) { this.showMsg('You already have a harpoon!'); return; }
-    if (state.money < 4000) { this.showMsg('Not enough NOK!'); return; }
-    state.money -= 4000;
-    state.hasHarpoon = true;
-    SaveSystem.saveNow(state);
-    this.game.events.emit('updateUI', state);
-    this.showMsg('🔱 Harpoon purchased! Use it on heavy fish.');
+    if (this.state.hasHarpoon) { this.showMsg('You already have a harpoon!'); return; }
+    if ((this.state.money || 0) < 4000) { this.showMsg('Not enough NOK! Need 4,000.'); return; }
+    this.state.money -= 4000;
+    this.state.hasHarpoon = true;
+    SaveSystem.save(this.state);
+    this.game.events.emit('updateUI', this.state);
+    this.showMsg('🔱 Harpoon purchased! Use it on any fish over 50kg.');
     this._renderMarket();
   }
 

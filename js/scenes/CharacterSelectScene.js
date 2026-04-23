@@ -31,7 +31,18 @@ window.CharacterSelectScene = class extends Phaser.Scene {
 
       // Card bg
       const cardBg = this.add.rectangle(x, y, 100, 150, 0x1e293b, 0.9)
-        .setStrokeStyle(2, 0x38bdf8);
+        .setStrokeStyle(2, 0x38bdf8)
+        .setInteractive({ useHandCursor: true });
+
+      // Tap: first tap selects, second tap confirms
+      cardBg.on('pointerdown', () => {
+        if (this.selectedIndex === i) {
+          this.confirmSelection();
+        } else {
+          this.selectedIndex = i;
+          this.updateSelection();
+        }
+      });
 
       // Animated sprite (idle-down)
       const sprite = this.add.sprite(x, y - 22, c.key, 1)
@@ -68,7 +79,7 @@ window.CharacterSelectScene = class extends Phaser.Scene {
       fontSize: '13px', color: '#94a3b8', fontFamily: 'monospace'
     }).setOrigin(0.5);
 
-    this.add.text(400, 620, '← → ↑ ↓  Navigate       ENTER  Select', {
+    this.add.text(400, 620, 'Tap card to select  ·  Tap again to confirm  ·  ENTER', {
       fontSize: '13px', color: '#475569', fontFamily: 'monospace'
     }).setOrigin(0.5);
 
@@ -166,27 +177,68 @@ window.CharacterSelectScene = class extends Phaser.Scene {
     this._nameDisplay = this.add.text(cx, cy + 5, 'Ikke _', {
       fontSize: '24px', color: '#fef08a', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(12);
-    this.add.text(cx, cy + 58, 'ENTER to confirm   ESC to skip', {
-      fontSize: '12px', color: '#475569', fontFamily: 'monospace'
-    }).setOrigin(0.5).setDepth(12);
 
-    this._nameKeyHandler = (e) => {
-      if (e.keyCode === 27) { // ESC — skip
-        this.input.keyboard.off('keydown', this._nameKeyHandler);
-        this._finishCharacterSelect(chosen, 'Ikke Musikk');
-      } else if (e.keyCode === 13) { // ENTER — confirm
-        this.input.keyboard.off('keydown', this._nameKeyHandler);
-        const n = this._nameInput.trim();
-        this._finishCharacterSelect(chosen, n ? 'Ikke ' + n : 'Ikke Musikk');
-      } else if (e.keyCode === 8) { // Backspace
-        this._nameInput = this._nameInput.slice(0, -1);
-        this._nameDisplay.setText('Ikke ' + this._nameInput + '_');
-      } else if (e.key && e.key.length === 1 && this._nameInput.length < 15) {
-        this._nameInput += e.key;
-        this._nameDisplay.setText('Ikke ' + this._nameInput + '_');
-      }
+    // HTML input overlay — works on both desktop and mobile (triggers native keyboard on mobile)
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.maxLength = 15;
+    inputEl.placeholder = 'Your name...';
+    inputEl.autocomplete = 'off';
+    inputEl.style.cssText = [
+      'position:fixed', 'left:50%', 'top:50%', 'transform:translate(-50%,-50%)',
+      'width:260px', 'padding:12px 16px', 'font-size:22px', 'font-family:monospace',
+      'background:#1e293b', 'color:#fef08a', 'border:2px solid #38bdf8',
+      'border-radius:10px', 'outline:none', 'text-align:center', 'z-index:9999'
+    ].join(';');
+    document.body.appendChild(inputEl);
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.textContent = '✓ Confirm';
+    confirmBtn.style.cssText = [
+      'position:fixed', 'left:50%', 'top:calc(50% + 60px)', 'transform:translateX(-50%)',
+      'padding:12px 32px', 'font-size:16px', 'font-family:monospace',
+      'background:#1e3a5f', 'color:#4ade80', 'border:2px solid #4ade80',
+      'border-radius:10px', 'cursor:pointer', 'z-index:9999', 'touch-action:manipulation'
+    ].join(';');
+    document.body.appendChild(confirmBtn);
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.cssText = [
+      'position:fixed', 'left:50%', 'top:calc(50% + 108px)', 'transform:translateX(-50%)',
+      'padding:8px 24px', 'font-size:14px', 'font-family:monospace',
+      'background:transparent', 'color:#64748b', 'border:1px solid #475569',
+      'border-radius:8px', 'cursor:pointer', 'z-index:9999', 'touch-action:manipulation'
+    ].join(';');
+    document.body.appendChild(skipBtn);
+
+    const cleanup = () => {
+      if (document.body.contains(inputEl)) document.body.removeChild(inputEl);
+      if (document.body.contains(confirmBtn)) document.body.removeChild(confirmBtn);
+      if (document.body.contains(skipBtn)) document.body.removeChild(skipBtn);
     };
-    this.input.keyboard.on('keydown', this._nameKeyHandler);
+
+    const confirm = () => {
+      cleanup();
+      const n = inputEl.value.trim();
+      this._finishCharacterSelect(chosen, n ? 'Ikke ' + n : 'Ikke Musikk');
+    };
+    const skip = () => {
+      cleanup();
+      this._finishCharacterSelect(chosen, 'Ikke Musikk');
+    };
+
+    inputEl.addEventListener('input', () => {
+      this._nameDisplay.setText('Ikke ' + inputEl.value + '_');
+    });
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirm();
+      if (e.key === 'Escape') skip();
+    });
+    confirmBtn.addEventListener('pointerdown', e => { e.preventDefault(); confirm(); });
+    skipBtn.addEventListener('pointerdown', e => { e.preventDefault(); skip(); });
+
+    setTimeout(() => inputEl.focus(), 80);
   }
 
   _finishCharacterSelect(chosen, playerName) {

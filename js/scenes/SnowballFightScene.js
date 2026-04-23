@@ -152,7 +152,7 @@ window.SnowballFightScene = class SnowballFightScene extends Phaser.Scene {
       fontSize: '22px', color: '#7dd3fc', fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 4
     }).setOrigin(0.5);
-    const oSub = this.add.text(W/2, H/2 + 14, 'Press SPACE to start!', {
+    const oSub = this.add.text(W/2, H/2 + 14, 'Tap THROW or SPACE to start!', {
       fontSize: '14px', color: '#cbd5e1', fontFamily: 'monospace'
     }).setOrigin(0.5);
     this._startOverlay.add([oRect, oTxt, oSub]);
@@ -220,19 +220,19 @@ window.SnowballFightScene = class SnowballFightScene extends Phaser.Scene {
     }
 
     // ── NPC AI ───────────────────────────────────────────────────────────────
-    // NPC throw interval ramps from 900ms → 400ms as game progresses
-    const npcThrowInterval = this.elapsed < 15000 ? 900
-                           : this.elapsed < 30000 ? 700
-                           : this.elapsed < 45000 ? 550
-                           : 400;
+    // NPC throw interval ramps from 1000ms → 500ms as game progresses
+    const npcThrowInterval = this.elapsed < 15000 ? 1000
+                           : this.elapsed < 30000 ? 800
+                           : this.elapsed < 45000 ? 650
+                           : 500;
     // NPC movement speed ramps too
-    const npcMoveSpeed = this.elapsed < 20000 ? 110
-                       : this.elapsed < 40000 ? 160
+    const npcMoveSpeed = this.elapsed < 20000 ? 120
+                       : this.elapsed < 40000 ? 165
                        : 220;
 
     // Drift toward move target (change target more frequently as game goes on)
     this.npcMoveTimer += delta;
-    const npcRetargetInterval = this.elapsed < 20000 ? 1000 : this.elapsed < 40000 ? 800 : 550;
+    const npcRetargetInterval = this.elapsed < 20000 ? 1200 : this.elapsed < 40000 ? 900 : 650;
     if (this.npcMoveTimer >= npcRetargetInterval) {
       this.npcMoveTimer = 0;
       this.npcMoveTarget = {
@@ -324,7 +324,7 @@ window.SnowballFightScene = class SnowballFightScene extends Phaser.Scene {
   }
 
   _throw(owner, fromX, fromY, toX, toY) {
-    const speed  = 380;
+    const speed  = 300;
     const angle  = Math.atan2(toY - fromY, toX - fromX);
     const vx     = Math.cos(angle) * speed;
     const vy     = Math.sin(angle) * speed;

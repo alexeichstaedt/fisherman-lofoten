@@ -15,7 +15,7 @@ window.DragCatchMixin = {
     const value  = weight * fish.pricePerKg;
     const xp     = Math.round(weight * fish.xpMult * 50);
     const auraGain = (fish.rarity === 'secret' || fish.rarity === 'legendary') ? 3
-                   : fish.rarity === 'rare' ? 2 : 1;
+                   : fish.rarity === 'rare' ? 2 : 0;
 
     // Give XP immediately
     if (window.addXP) {
@@ -27,8 +27,10 @@ window.DragCatchMixin = {
       this.state.xp = (this.state.xp || 0) + xp;
     }
 
-    // Give aura immediately
-    this.state.aura = Math.min(100, (this.state.aura || 0) + auraGain);
+    // Give aura only for rare+ catches
+    if (auraGain > 0) {
+      this.state.aura = Math.min(100, (this.state.aura || 0) + auraGain);
+    }
 
     // Store catch for later sale at Reine Market
     if (!this.state.dragCatches) this.state.dragCatches = [];
@@ -47,6 +49,7 @@ window.DragCatchMixin = {
 
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI', this.state);
-    this.showMsg(`🎣 Drag: ${fish.name} ${weight}kg  +${xp}XP  +${auraGain} AURA`);
+    const auraStr = auraGain > 0 ? `  +${auraGain} AURA` : '';
+    this.showMsg(`🎣 Drag: ${fish.name} ${weight}kg  +${xp}XP${auraStr}`);
   }
 };

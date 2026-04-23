@@ -1,6 +1,6 @@
-// Fisherman: Lofoten — © 2026 Eichstaedt Ikke Musikk. All rights reserved.
+// Fisherman: Lofoten — © 2026 Ikke Musikk Eichstaedt. All rights reserved.
 window.SaveSystem = {
-  DEFAULT: { playerName:'Ikke Musikk', level:1, xp:0, money:1000, rod:null, hasBoat:false, inventory:[], trophies:[], top10:[], grandTrophy:false, location:'leknes', x:14, y:14, characterKey:'ikke-musikk', companion:null, animals:[], hasTromsoTicket:false, followAnimalId:null, usedIdioms:[], ownedJackets:[], ownedCabins:[], cabinEarnings:0, hasFerryPass:false, hasSeenWelcome:false, hasReceivedStarterKit:false, aura: 20, playerItems: [], baddiesCaught: [], hatersDefeated: [], usaPassportTx: null, norPassportTx: null, norPassportTy: null, hasUsaPassport: false, hasNorPassport: false, tournamentActive: false, tournamentBestFish: null, tournamentEndTime: null, ownedRecords: ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'], myAlbums: [], hasRadio: true, radioStation: 0, radioSongIndex: 0, dragCatches: [], hasKvalvikaKey: false, hasBadderCabin: false, hasTromsoSongs: false, followingBaddieName: null, skilpaddeLastPlayed: null, hasHarpoon: false },
+  DEFAULT: { playerName:'Ikke Musikk', level:1, xp:0, money:1000, rod:null, hasBoat:false, inventory:[], trophies:[], top10:[], grandTrophy:false, location:'leknes', x:14, y:14, characterKey:'ikke-musikk', companion:null, animals:[], hasTromsoTicket:false, followAnimalId:null, usedIdioms:[], ownedJackets:[], ownedCabins:[], cabinEarnings:0, hasFerryPass:false, hasSeenWelcome:false, hasReceivedStarterKit:false, aura: 20, playerItems: [], baddiesCaught: [], hatersDefeated: [], usaPassportTx: null, norPassportTx: null, norPassportTy: null, hasUsaPassport: false, hasNorPassport: false, tournamentActive: false, tournamentBestFish: null, tournamentEndTime: null, ownedRecords: ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'], myAlbums: [], hasRadio: false, radioStation: 0, radioSongIndex: 0, dragCatches: [], hasKvalvikaKey: false, hasBadderCabin: false, hasTromsoSongs: false, followingBaddieName: null, skilpaddeLastPlayed: null },
   _timer: null,
   _pending: null,
   save(s) {
@@ -42,7 +42,7 @@ window.SaveSystem = {
     if (typeof d.tournamentEndTime === 'undefined') d.tournamentEndTime = null;
     if (!d.ownedRecords) d.ownedRecords = ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'];
     if (!d.myAlbums) d.myAlbums = [];
-    if (d.hasRadio === undefined || d.hasRadio === false) d.hasRadio = true;
+    if (d.hasRadio === undefined) d.hasRadio = false;
     if (typeof d.radioStation !== 'number') d.radioStation = 0;
     if (typeof d.radioSongIndex !== 'number') d.radioSongIndex = 0;
     if (!Array.isArray(d.dragCatches)) d.dragCatches = [];

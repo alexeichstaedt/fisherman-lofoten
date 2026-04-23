@@ -93,7 +93,14 @@ window.FlagQuizScene = class FlagQuizScene extends Phaser.Scene {
       const t = this.add.text(cx, 380 + i * 48,
         (i === 0 ? '▶ ' : '  ') + c.label,
         { fontSize: '14px', color: i === 0 ? '#4ade80' : '#cbd5e1', fontFamily: 'monospace' }
-      ).setOrigin(0.5).setDepth(1);
+      ).setOrigin(0.5).setDepth(1)
+        .setInteractive({ useHandCursor: true });
+      t.on('pointerdown', () => {
+        if (this.answered || !this.inputReady) return;
+        this.choiceIdx = i;
+        this._updateCursor();
+        this._confirm();
+      });
       return t;
     });
 
@@ -103,7 +110,7 @@ window.FlagQuizScene = class FlagQuizScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(1);
 
     // Hint
-    this.add.text(cx, 585, '↑↓ choose   ENTER confirm', {
+    this.add.text(cx, 585, 'Tap an answer  ·  ↑↓ ENTER', {
       fontSize: '10px', color: '#475569', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(1);
 
@@ -122,6 +129,7 @@ window.FlagQuizScene = class FlagQuizScene extends Phaser.Scene {
     this.cursors  = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.escKey   = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
     // Brief input delay so held movement key doesn't immediately confirm
     this.time.delayedCall(120, () => { this.inputReady = true; });
@@ -129,6 +137,11 @@ window.FlagQuizScene = class FlagQuizScene extends Phaser.Scene {
 
   update() {
     if (this.answered || !this.inputReady) return;
+
+    if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
+      this._finish(false);
+      return;
+    }
 
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
       this.choiceIdx = (this.choiceIdx - 1 + this.choices.length) % this.choices.length;

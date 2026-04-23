@@ -33,6 +33,9 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     this.sushiObjects = [];
     this.skilpaddeOpen = false;
     this._skilpaddeObjects = [];
+    this.matematikkOpen = false;
+    this._matematikkObjects = [];
+    this._matematikkTab = 0;
     this.companionSprite = null;
     this.lastPlayerTile = {tx:0, ty:0};
   }
@@ -65,6 +68,11 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       fontSize:'9px', color:'#fbbf24', fontFamily:'monospace', align:'center',
       stroke:'#000000', strokeThickness:3
     }).setOrigin(0.5).setDepth(5);
+    // Matematikk Bibliotek label on 4th cabin (cabin1 at tx:25, ty:0)
+    this.add.text((25 + 2.5) * _TS, (0 + 2.5) * _TS, 'Matematikk Bibliotek', {
+      fontSize:'9px', color:'#fbbf24', fontFamily:'monospace', align:'center',
+      stroke:'#000000', strokeThickness:3
+    }).setOrigin(0.5).setDepth(5);
     this.interactHint= this.add.text(400, 592, 'Press SPACE to interact', {fontSize:'13px',color:'#94a3b8',stroke:'#000000',strokeThickness:2}).setOrigin(0.5).setDepth(20).setVisible(false).setScrollFactor(0);
     this.msgText     = this.add.text(400, 572, '', {fontSize:'14px',color:'#ffffff',stroke:'#000000',strokeThickness:3,backgroundColor:'#00000088',padding:{x:8,y:4}}).setOrigin(0.5).setDepth(20).setScrollFactor(0).setVisible(false);
     this.locationLabel= this.add.text(400, -50, 'Henningsvær', {fontSize:'18px',color:'#ffffff',stroke:'#000000',strokeThickness:4}).setOrigin(0.5).setDepth(20).setScrollFactor(0);
@@ -80,9 +88,13 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     const travelBg   = this.add.rectangle(0,0,400,340,0x0f172a,0.97).setStrokeStyle(2,0x4ade80);
     this.travelTitle = this.add.text(0,-140,'Travel To...',{fontSize:'22px',color:'#4ade80',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelDests = ['Leknes','Reine','Kvalvika','Kåkern'];
-    this.travelTexts = this.travelDests.map((d,i)=>this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5));
+    this.travelTexts = this.travelDests.map((d,i)=>{
+      const t = this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5);
+      t.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.travelMenuOpen) return; this.travelIndex=i; this.updateTravelCursor(); this.executeTravel(d); });
+      return t;
+    });
     this.travelCursor= this.add.text(0,0,'>',{fontSize:'16px',color:'#4ade80'});
-    this.travelHint  = this.add.text(0,140,'ENTER to travel  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
+    this.travelHint  = this.add.text(0,140,'Tap or ENTER to travel  ·  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelLayer = this.add.container(400,320).setDepth(51).setVisible(false).setScrollFactor(0);
     this.travelLayer.add([travelBg,this.travelTitle,...this.travelTexts,this.travelCursor,this.travelHint]);
     this.travelIndex = 0;
@@ -103,6 +115,8 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       const preview    = this.add.sprite(-80, -90+i*58, j.key, 1).setScale(2);
       const label      = this.add.text(-48, -100+i*58, j.name, {fontSize:'16px',color:'#ffffff',fontFamily:'monospace'});
       const priceLabel = this.add.text(-48,  -82+i*58, j.price === 0 ? 'Default — always free' : j.price.toLocaleString() + ' kr', {fontSize:'13px',color:'#4ade80',fontFamily:'monospace'});
+      label.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(!this.jacketShopOpen) return; this.jacketShopIndex=i; this.updateJacketShopCursor(); this.executeJacketShop(); });
+      label.disableInteractive(); // re-enabled in openJacketShop()
       return { preview, label, priceLabel };
     });
     this.jsCursor   = this.add.text(0,0,'>',{fontSize:'16px',color:'#fbbf24'});
@@ -316,6 +330,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
   openJacketShop() {
     this.jacketShopOpen = true;
     this.jacketShopIndex = 0;
+    this.jsItemTexts.forEach(it => it.label.setInteractive());
     this.updateJacketShopCursor();
     this.jsLayer.setVisible(true);
   }
@@ -419,17 +434,22 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     this.swapShopOpen = false;
     this.sushiOpen = false;
     this.skilpaddeOpen = false;
+    this.matematikkOpen = false;
     this.swapShopObjects.forEach(o => o.destroy());
     this.swapShopObjects = [];
     this.sushiObjects.forEach(o => o.destroy());
     this.sushiObjects = [];
     (this._skilpaddeObjects || []).forEach(o => o.destroy());
     this._skilpaddeObjects = [];
+    (this._matematikkObjects || []).forEach(o => o.destroy());
+    this._matematikkObjects = [];
+    if (window.hideMobileNumpad) window.hideMobileNumpad();
     if (this.swapShopLayer) this.swapShopLayer.setVisible(false);
     if (this.sushiLayer) this.sushiLayer.setVisible(false);
     if (this.diagLayer)  this.diagLayer.setVisible(false);
     if (this.travelLayer) this.travelLayer.setVisible(false);
     if (this.jsLayer) this.jsLayer.setVisible(false);
+    if (this.jsItemTexts) this.jsItemTexts.forEach(it => it.label.disableInteractive());
   }
 
   buildSwapShopUI() {
@@ -478,6 +498,8 @@ window.HenningsvaarScene = class extends Phaser.Scene {
         .setDepth(58).setScrollFactor(0);
       const xpLabel = this.add.text(cx + 100, fy, '+' + xp.toLocaleString() + ' XP', {fontSize:'14px', color:'#4ade80', fontFamily:'monospace'})
         .setDepth(58).setScrollFactor(0);
+      label.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(!this.sushiOpen) return; this.sushiCursor=i; this._executeSushi(); });
+      xpLabel.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(!this.sushiOpen) return; this.sushiCursor=i; this._executeSushi(); });
       this.sushiObjects.push(label, xpLabel);
     });
 
@@ -548,6 +570,16 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       const t = this.add.text(cx - W/2 + 20, y, cursor + check + items[i], {
         fontSize: '11px', color, fontFamily: 'monospace'
       }).setDepth(58).setScrollFactor(0);
+      t.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{
+        if(!this.swapShopOpen) return;
+        this.swapShopCursor = i;
+        if (this.swapShopSelected.includes(i)) {
+          this.swapShopSelected = this.swapShopSelected.filter(x => x !== i);
+        } else if (this.swapShopSelected.length < 2) {
+          this.swapShopSelected.push(i);
+        }
+        this._renderSwapShop();
+      });
       this.swapShopObjects.push(t);
     }
 
@@ -559,6 +591,9 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     const statusTxt = this.add.text(cx, cy + H/2 - 42, statusMsg, {
       fontSize: '12px', color: statusColor, fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(58).setScrollFactor(0);
+    if (selCount === 2) {
+      statusTxt.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(this.swapShopOpen) this._executeSwap(); });
+    }
     const hint = this.add.text(cx, cy + H/2 - 20, '↑↓ Navigate   SPACE select/deselect   ENTER swap   ESC cancel', {
       fontSize: '10px', color: '#475569', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(58).setScrollFactor(0);
@@ -604,7 +639,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
   showCabinIdiom(door) {
     if (door && door.tx === 3) { this.openSwapShop(); return; }
     if (door && door.tx === 18) { this._openSkilpaddeMenu(); return; }
-    if (door && door.tx === 25) { this._openMathLibrary(); return; }
+    if (door && door.tx === 25) { this._openMatematikkBibliotek(); return; }
     const idioms = GAME_DATA.CABIN_IDIOMS;
     if (!this.state.usedIdioms) this.state.usedIdioms = [];
     if (this.state.usedIdioms.length >= idioms.length) this.state.usedIdioms = [];
@@ -624,7 +659,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
-      if (this.dialogOpen || this.travelMenuOpen || this.jacketShopOpen || this.swapShopOpen || this.sushiOpen || this.skilpaddeOpen) { this.closeAll(); return; }
+      if (this.dialogOpen || this.travelMenuOpen || this.jacketShopOpen || this.swapShopOpen || this.sushiOpen || this.skilpaddeOpen || this.matematikkOpen) { this.closeAll(); return; }
     }
 
     if (this.travelMenuOpen) {
@@ -684,14 +719,8 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       return;
     }
 
-    if (this._mathLibOpen) {
-      if (Phaser.Input.Keyboard.JustDown(this.escKey)) { this._closeMathLibrary(); return; }
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-        this._mathLibTab = (this._mathLibTab - 1 + 5) % 5; this._renderMathLibrary(); return;
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-        this._mathLibTab = (this._mathLibTab + 1) % 5; this._renderMathLibrary(); return;
-      }
+    if (this.matematikkOpen) {
+      this._handleMatematikkInput();
       return;
     }
 
@@ -765,6 +794,188 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     }
   }
 
+  _openMatematikkBibliotek() {
+    this.matematikkOpen = true;
+    this._matematikkObjects = [];
+    this._matematikkTab = 0;
+    this._renderMatematikkTab(0);
+  }
+
+  _renderMatematikkTab(tabIndex) {
+    this._matematikkObjects.forEach(o => o.destroy());
+    this._matematikkObjects = [];
+    const cx = 400, cy = 310, W = 650, H = 330;
+    const add = o => { this._matematikkObjects.push(o); return o; };
+
+    // Each line: { t: text, c: colour }  —  blank lines (t:'') add vertical space
+    const W_ = '#e2e8f0', YL = '#fbbf24', GR = '#4ade80',
+          BL = '#93c5fd', GY = '#94a3b8', PK = '#fca5a5', PU = '#c4b5fd';
+    const TABS = [
+      {
+        icon: '➕', label: 'Addition', color: '#86efac',
+        formula: 'a + b = total',
+        lines: [
+          { t: 'Add your catches together to find the total weight.', c: W_ },
+          { t: '', c: '' },
+          { t: 'You caught a 14 kg cod and a 9 kg haddock.', c: YL },
+          { t: 'How much fish did you bring back?', c: YL },
+          { t: '', c: '' },
+          { t: '  14 kg + 9 kg = 23 kg  ✓', c: GR },
+          { t: '', c: '' },
+          { t: 'Tip: line up the digits, then add from right to left.', c: GY },
+          { t: 'If a column adds up to 10 or more, carry the 1 over.', c: GY },
+        ]
+      },
+      {
+        icon: '➖', label: 'Subtraction', color: '#fca5a5',
+        formula: 'a − b = difference',
+        lines: [
+          { t: 'Subtract to find what is left after selling or losing fish.', c: W_ },
+          { t: '', c: '' },
+          { t: 'Your bucket holds 30 kg. You already have 17 kg inside.', c: YL },
+          { t: 'How much room is left?', c: YL },
+          { t: '', c: '' },
+          { t: '  30 kg − 17 kg = 13 kg  ✓', c: GR },
+          { t: '', c: '' },
+          { t: 'Tip: subtract right to left. If the top digit is smaller,', c: GY },
+          { t: 'borrow 10 from the column to the left.', c: GY },
+        ]
+      },
+      {
+        icon: '✖', label: 'Multiplication', color: '#fde68a',
+        formula: 'a × b = product',
+        lines: [
+          { t: 'Multiply to scale up — same amount, many times over.', c: W_ },
+          { t: '', c: '' },
+          { t: 'Each crate of fish weighs 8 kg. You have 6 crates.', c: YL },
+          { t: 'What is the total weight?', c: YL },
+          { t: '', c: '' },
+          { t: '  8 kg × 6 = 48 kg  ✓', c: GR },
+          { t: '', c: '' },
+          { t: 'Tip: multiply right to left. If a column gives 10 or more,', c: GY },
+          { t: 'write the ones digit and carry the tens digit left.', c: GY },
+        ]
+      },
+      {
+        icon: '➗', label: 'Division', color: '#93c5fd',
+        formula: 'a ÷ b = quotient',
+        lines: [
+          { t: 'Divide to split things into equal groups.', c: W_ },
+          { t: '', c: '' },
+          { t: 'You caught 36 kg of fish to share equally among 4 boats.', c: YL },
+          { t: 'How much does each boat get?', c: YL },
+          { t: '', c: '' },
+          { t: '  36 kg ÷ 4 = 9 kg each  ✓', c: GR },
+          { t: '', c: '' },
+          { t: 'Tip: ask "how many times does 4 fit into 36?" = 9 times.', c: GY },
+          { t: 'Left over amount after dividing = the remainder.', c: GY },
+        ]
+      },
+      {
+        icon: '🔢', label: 'Algebra', color: '#c4b5fd',
+        formula: 'find the unknown — do the same to both sides',
+        lines: [
+          { t: 'Use algebra when you know the total but not every part.', c: W_ },
+          { t: '', c: '' },
+          { t: 'A crate is 12 kg total. The crate itself weighs 4 kg.', c: YL },
+          { t: 'There are 2 identical fish inside. How heavy is one fish?', c: YL },
+          { t: '', c: '' },
+          { t: '  2x + 4 = 12', c: BL },
+          { t: '  2x = 12 − 4  →  2x = 8', c: BL },
+          { t: '  x  = 8 ÷ 2   →  x  = 4 kg  ✓', c: GR },
+          { t: 'Each fish weighs 4 kg.', c: GY },
+        ]
+      },
+    ];
+
+    const tab = TABS[tabIndex];
+    const top = cy - H / 2;
+
+    // Panel background + border
+    add(this.add.rectangle(cx, cy, W, H, 0x0b1a2e, 0.98)
+      .setStrokeStyle(2, 0x60a5fa).setDepth(60).setScrollFactor(0));
+
+    // Title
+    add(this.add.text(cx, top + 18, '📚  Matematikk Bibliotek', {
+      fontSize: '14px', color: '#60a5fa', fontFamily: 'monospace', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+
+    // Tab selector row
+    const tabLabels = ['➕', '➖', '✖', '➗', '🔢'];
+    const tabSpacing = 90;
+    const tabRowX = cx - tabSpacing * 2;
+    tabLabels.forEach((lbl, i) => {
+      const tabX = tabRowX + i * tabSpacing;
+      const isActive = i === tabIndex;
+      const tabRect = add(this.add.rectangle(tabX, top + 44, 72, 22, isActive ? 0x1e3a5f : 0x0f172a, 1)
+        .setStrokeStyle(1, isActive ? 0x60a5fa : 0x334155).setDepth(61).setScrollFactor(0));
+      if (!isActive) {
+        tabRect.setInteractive({useHandCursor:true})
+          .on('pointerdown', ()=>{ if(!this.matematikkOpen) return; this._matematikkTab=i; this._renderMatematikkTab(i); });
+      }
+      add(this.add.text(tabX, top + 44, lbl, {
+        fontSize: '13px', color: isActive ? '#ffffff' : '#64748b', fontFamily: 'monospace'
+      }).setOrigin(0.5).setDepth(62).setScrollFactor(0));
+    });
+
+    // Tab label + formula
+    add(this.add.text(cx, top + 70, tab.icon + '  ' + tab.label, {
+      fontSize: '16px', color: tab.color, fontFamily: 'monospace', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+    add(this.add.text(cx, top + 90, tab.formula, {
+      fontSize: '13px', color: '#fef08a', fontFamily: 'monospace', stroke: '#000', strokeThickness: 2
+    }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+
+    // Divider
+    add(this.add.rectangle(cx, top + 105, W - 40, 1, 0x334155).setDepth(61).setScrollFactor(0));
+
+    // Content lines — blank lines add space, coloured lines render with their colour
+    const lineH = 17, contentX = cx - W / 2 + 26, contentStartY = top + 114;
+    let row = 0;
+    tab.lines.forEach(line => {
+      if (line.t !== '') {
+        add(this.add.text(contentX, contentStartY + row * lineH, line.t, {
+          fontSize: '13px', color: line.c, fontFamily: 'monospace'
+        }).setDepth(61).setScrollFactor(0));
+      }
+      row++;
+    });
+
+    // Bottom navigation hint + close button
+    const nav = tabIndex === 0 ? '▶ next tab  ·  ESC close'
+              : tabIndex === 4 ? '◀ prev tab  ·  ESC close'
+              : '◀ ▶ browse tabs  ·  ESC close';
+    add(this.add.text(cx, cy + H / 2 - 28, 'Tap tab · ◀▶ browse · ESC close', {
+      fontSize: '10px', color: '#475569', fontFamily: 'monospace'
+    }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+    const closeBtn = add(this.add.rectangle(cx, cy + H / 2 - 12, 80, 22, 0x1e3a5f)
+      .setStrokeStyle(1, 0x60a5fa).setDepth(61).setScrollFactor(0)
+      .setInteractive({useHandCursor:true}));
+    closeBtn.on('pointerdown', ()=>{ if(this.matematikkOpen) this._closeMatematikkBibliotek(); });
+    add(this.add.text(cx, cy + H / 2 - 12, 'Close', {fontSize:'11px', color:'#60a5fa', fontFamily:'monospace'})
+      .setOrigin(0.5).setDepth(62).setScrollFactor(0));
+  }
+
+  _closeMatematikkBibliotek() {
+    this.matematikkOpen = false;
+    this._matematikkObjects.forEach(o => o.destroy());
+    this._matematikkObjects = [];
+  }
+
+  _handleMatematikkInput() {
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+      if (this._matematikkTab > 0) { this._matematikkTab--; this._renderMatematikkTab(this._matematikkTab); }
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+      if (this._matematikkTab < 4) { this._matematikkTab++; this._renderMatematikkTab(this._matematikkTab); }
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.escKey) ||
+        Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
+        Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      this._closeMatematikkBibliotek();
+    }
+  }
+
   _openSkilpaddeMenu() {
     this.skilpaddeOpen = true;
     this._skilpaddeObjects = [];
@@ -796,160 +1007,17 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       fontSize:'14px', color: canAfford ? '#ffffff' : '#ef4444', fontFamily:'monospace',
       stroke:'#000', strokeThickness:3
     }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+    this._skilpaddeOpt1.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(!this.skilpaddeOpen) return; this._startSkilpadde(); });
     this._skilpaddeOpt2 = add(this.add.text(cx, cy + H/2 - 26, '  Leave', {
       fontSize:'14px', color:'#94a3b8', fontFamily:'monospace'
     }).setOrigin(0.5).setDepth(61).setScrollFactor(0));
+    this._skilpaddeOpt2.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(!this.skilpaddeOpen) return; this._closeSkilpaddeMenu(); });
   }
 
   _closeSkilpaddeMenu() {
     this.skilpaddeOpen = false;
     (this._skilpaddeObjects || []).forEach(o => o.destroy());
     this._skilpaddeObjects = [];
-  }
-
-  _openMathLibrary() {
-    this._mathLibOpen = true;
-    this._mathLibTab = 0;
-    this._renderMathLibrary();
-  }
-
-  _closeMathLibrary() {
-    this._mathLibOpen = false;
-    (this._mathLibObjects || []).forEach(o => o.destroy());
-    this._mathLibObjects = [];
-  }
-
-  _renderMathLibrary() {
-    (this._mathLibObjects || []).forEach(o => o.destroy());
-    this._mathLibObjects = [];
-
-    const W = 520, H = 400;
-    const cx = 400, cy = 300;
-
-    const bg = this.add.rectangle(cx, cy, W, H, 0x0f172a, 0.97).setDepth(60).setScrollFactor(0);
-    const border = this.add.rectangle(cx, cy, W, H).setStrokeStyle(2, 0x60a5fa).setDepth(60).setScrollFactor(0);
-    const title = this.add.text(cx, cy - H/2 + 18, '📚 Matematikk Bibliotek', {
-      fontSize:'15px', color:'#93c5fd', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-
-    const tabNames = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Algebra'];
-    const tabW = W / 5;
-    tabNames.forEach((name, i) => {
-      const active = i === this._mathLibTab;
-      const tabX = cx - W/2 + tabW * i + tabW/2;
-      const tabBg = this.add.rectangle(tabX, cy - H/2 + 40, tabW - 4, 24, active ? 0x1e3a5f : 0x1e293b)
-        .setDepth(61).setScrollFactor(0);
-      const tabTxt = this.add.text(tabX, cy - H/2 + 40, name, {
-        fontSize:'10px', color: active ? '#93c5fd' : '#64748b', fontFamily:'monospace'
-      }).setOrigin(0.5).setDepth(62).setScrollFactor(0);
-      this._mathLibObjects.push(tabBg, tabTxt);
-    });
-
-    const divider = this.add.rectangle(cx, cy - H/2 + 54, W - 10, 1, 0x334155).setDepth(61).setScrollFactor(0);
-    this._mathLibObjects.push(bg, border, title, divider);
-
-    const tutorials = [
-      // Addition
-      [
-        '➕  ADDITION',
-        '',
-        'Add numbers together to find a total.',
-        '',
-        '  Example:  34 + 47 = ?',
-        '    Line up digits by place value:',
-        '      34',
-        '    + 47',
-        '    ----',
-        '      81   (4+7=11, write 1 carry 1)',
-        '           (3+4+1=8)',
-        '',
-        '  Tip: Start from the rightmost digit.',
-        '  Carry the extra ten to the next column.',
-      ],
-      // Subtraction
-      [
-        '➖  SUBTRACTION',
-        '',
-        'Find the difference between two numbers.',
-        '',
-        '  Example:  73 - 28 = ?',
-        '    Borrow if top digit is smaller:',
-        '      73',
-        '    - 28',
-        '    ----',
-        '      45   (13-8=5, 6-2=4)',
-        '',
-        '  Tip: When borrowing, reduce the',
-        '  left digit by 1 and add 10 to right.',
-      ],
-      // Multiplication
-      [
-        '✖  MULTIPLICATION',
-        '',
-        'Repeated addition, done faster.',
-        '',
-        '  Example:  24 × 3 = ?',
-        '    Multiply each digit by 3:',
-        '      24',
-        '    ×  3',
-        '    ----',
-        '      72   (4×3=12, write 2 carry 1)',
-        '           (2×3=6, +1=7)',
-        '',
-        '  Tip: Learn your times tables 1–12.',
-        '  Any big multiplication breaks into steps.',
-      ],
-      // Division
-      [
-        '➗  DIVISION',
-        '',
-        'Split a number into equal groups.',
-        '',
-        '  Example:  84 ÷ 4 = ?',
-        '    Long division:',
-        '      How many times does 4 go into 8? → 2',
-        '      Remainder 0. Bring down 4.',
-        '      How many times does 4 go into 4? → 1',
-        '      Answer: 21',
-        '',
-        '  Tip: Division is the opposite of',
-        '  multiplication. Check: 21 × 4 = 84 ✓',
-      ],
-      // Algebra
-      [
-        '𝑥  ALGEBRA',
-        '',
-        'Find the unknown value using balance.',
-        '',
-        '  Example:  2x + 3 = 11',
-        '    Step 1: Subtract 3 from both sides',
-        '            2x = 8',
-        '    Step 2: Divide both sides by 2',
-        '            x = 4',
-        '',
-        '  Check: 2(4) + 3 = 11 ✓',
-        '',
-        '  Tip: Whatever you do to one side,',
-        '  do the same to the other side!',
-      ],
-    ];
-
-    const lines = tutorials[this._mathLibTab];
-    const startY = cy - H/2 + 68;
-    lines.forEach((line, i) => {
-      const isHeader = i === 0;
-      const txt = this.add.text(cx - W/2 + 18, startY + i * 17, line, {
-        fontSize: isHeader ? '13px' : '11px',
-        color: isHeader ? '#fef08a' : '#cbd5e1',
-        fontFamily:'monospace'
-      }).setDepth(61).setScrollFactor(0);
-      this._mathLibObjects.push(txt);
-    });
-
-    const hint = this.add.text(cx, cy + H/2 - 18, '◀ ▶ switch subject  |  ESC close', {
-      fontSize:'10px', color:'#64748b', fontFamily:'monospace'
-    }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-    this._mathLibObjects.push(hint);
   }
 
   _startSkilpadde() {

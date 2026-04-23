@@ -101,10 +101,12 @@ window.LeknesScene = class extends Phaser.Scene {
       this.time.delayedCall(600, () => {
         this._welcomeActive = true;
         this._dialogQueue = [
+          { name: '🌊 Welcome!', text: 'Welcome ' + (this.state.playerName || 'Ikke Musikk') + ' to the Lofoten Islands! Your goal is to become a legendary fisherman. There are 5 legendary Trophy Fish you need to catch in order to qualify for the Grand Fishing Tournament.' },
           { name: '🌊 Welcome!', text: 'Catch fish to sell at the market for kroner. Use the kroner to upgrade your fishing gear and lifestyle. Fight haters, rizz baddies, and catch fish to increase your aura. Different maps have different surprises!' },
           { name: '🌊 Welcome!', text: 'Fisherman Tom has been waiting for you here in Leknes. Collect your fishing rod and ferry pass from him and begin exploring the beautiful islands of Lofoten!' },
         ];
-        this.openDialog('🌊 Welcome!', 'Welcome ' + (this.state.playerName || 'Ikke Musikk') + ' to the Lofoten Islands! Your goal is to become a legendary fisherman. There are 5 legendary Trophy Fish you need to catch in order to qualify for the Grand Fishing Tournament. Win the tournament and you beat the game!');
+        const n = this._dialogQueue.shift();
+        this.openDialog(n.name, n.text);
       });
     }
   }
@@ -370,9 +372,11 @@ window.LeknesScene = class extends Phaser.Scene {
     const W=680, H=460;
     const bg = this.add.rectangle(0,0,W,H,0x0f172a,0.97).setStrokeStyle(2,0x38bdf8);
     const tabs = ['SELL FISH','RODS','BOAT','GUIDES','ANIMALS'];
-    this.shopTabTexts = tabs.map((t,i)=>
-      this.add.text(-W/2+16+i*134, -H/2+14, t, {fontSize:'12px',color:'#94a3b8',fontFamily:'monospace'})
-    );
+    this.shopTabTexts = tabs.map((t,i)=>{
+      const txt = this.add.text(-W/2+16+i*134, -H/2+14, t, {fontSize:'12px',color:'#94a3b8',fontFamily:'monospace'});
+      txt.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.shopOpen) return; this.shopTab=i; this.renderShopTab(); });
+      return txt;
+    });
     this.shopTitle = this.add.text(0,-H/2+40,'',{fontSize:'20px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5);
     const divider = this.add.rectangle(0,-H/2+54,W-20,1,0x38bdf8,0.5);
     this.shopBody  = this.add.text(0,0,'',{fontSize:'13px',color:'#e2e8f0',fontFamily:'monospace',align:'center',wordWrap:{width:620}}).setOrigin(0.5);
@@ -385,18 +389,39 @@ window.LeknesScene = class extends Phaser.Scene {
     const travelBg = this.add.rectangle(0,0,400,380,0x0f172a,0.97).setStrokeStyle(2,0x4ade80);
     this.travelTitle = this.add.text(0,-160,'Travel To...',{fontSize:'22px',color:'#4ade80',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelDests = ['Reine','Kåkern','Kvalvika','Henningsvær','Tromsø'];
-    this.travelTexts = this.travelDests.map((d,i)=>this.add.text(0,-100+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5));
+    this.travelTexts = this.travelDests.map((d,i)=>{
+      const t = this.add.text(0,-100+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5);
+      t.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.travelMenuOpen) return; this.travelIndex=i; this.updateTravelCursor(); this.executeTravel(d); });
+      return t;
+    });
     this.travelCursor = this.add.text(0,0,'>',{fontSize:'16px',color:'#4ade80'});
-    this.travelHint   = this.add.text(0,160,'ENTER to travel  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
+    this.travelHint   = this.add.text(0,160,'Tap or ENTER to travel  ·  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelLayer  = this.add.container(400,320).setDepth(51).setVisible(false).setScrollFactor(0);
     this.travelLayer.add([travelBg,this.travelTitle,...this.travelTexts,this.travelCursor,this.travelHint]);
     this.travelIndex = 0;
 
     // Dialog box
     const diagBg  = this.add.rectangle(400,490,760,120,0x0f172a,0.95).setStrokeStyle(2,0x94a3b8).setDepth(52).setScrollFactor(0);
+    diagBg.setInteractive({ useHandCursor: true });
+    diagBg.on('pointerdown', () => {
+      if (!this.dialogOpen) return;
+      if (this.tournamentConfirmOpen) {
+        this.tournamentConfirmOpen = false;
+        this.closeAll();
+        this.state.inventory = [];
+        this.state.tournamentActive = true;
+        this.state.tournamentBestFish = null;
+        this.state.tournamentEndTime = Date.now() + 300000;
+        SaveSystem.saveNow(this.state);
+        this.game.events.emit('updateUI', this.state);
+        return;
+      }
+      this.advanceDialog();
+    });
+
     this.diagName = this.add.text(30,438,'',{fontSize:'15px',color:'#fbbf24',fontFamily:'monospace'}).setDepth(53).setScrollFactor(0);
     this.diagText = this.add.text(30,462,'',{fontSize:'14px',color:'#e2e8f0',fontFamily:'monospace',wordWrap:{width:740}}).setDepth(53).setScrollFactor(0);
-    this.diagHint = this.add.text(770,538,'SPACE to close',{fontSize:'12px',color:'#475569',fontFamily:'monospace'}).setOrigin(1,1).setDepth(53).setScrollFactor(0);
+    this.diagHint = this.add.text(770,538,'Tap or ENTER to continue',{fontSize:'12px',color:'#475569',fontFamily:'monospace'}).setOrigin(1,1).setDepth(53).setScrollFactor(0);
     this.diagLayer = this.add.container(0,0).setDepth(52).setVisible(false).setScrollFactor(0);
     this.diagLayer.add([diagBg,this.diagName,this.diagText,this.diagHint]);
 
@@ -592,7 +617,7 @@ window.LeknesScene = class extends Phaser.Scene {
     if (dest === 'Tromsø') {
       if (!this.state.hasTromsoTicket) {
         this.closeAll();
-        this.openDialog('Ferry Captain', 'You need a Tromsø ticket! Visit the Travel Agent (near the market) to buy one for 10,000 NOK.');
+        this.openDialog('Ferry Captain', 'You need a Tromsø ticket! Visit the Travel Agent (near the market) to buy one for 8,000 NOK.');
         return;
       }
       this.state.location = 'tromso';
@@ -625,6 +650,24 @@ window.LeknesScene = class extends Phaser.Scene {
     this.diagName.setText(name);
     this.diagText.setText(text);
     this.diagLayer.setVisible(true);
+    
+    // Update hint based on queue
+    if (this._dialogQueue && this._dialogQueue.length > 0) {
+      this.diagHint.setText('ENTER to continue');
+    } else {
+      this.diagHint.setText('ENTER to close');
+    }
+  }
+
+  advanceDialog() {
+    this.travelAgentConfirmOpen = false;
+    this.closeAll();
+    if (this._dialogQueue && this._dialogQueue.length > 0) {
+      const n = this._dialogQueue.shift();
+      this.openDialog(n.name, n.text);
+    } else {
+      this._welcomeActive = false;
+    }
   }
 
   closeAll() {
@@ -924,9 +967,7 @@ window.LeknesScene = class extends Phaser.Scene {
     if (this.dialogOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.escKey)) { if (this._welcomeActive) return; this._dialogQueue=[]; this.tournamentConfirmOpen=false; this.travelAgentConfirmOpen=false; this.closeAll(); return; }
       if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-        this.travelAgentConfirmOpen=false; this.closeAll();
-        if (this._dialogQueue && this._dialogQueue.length > 0) { const n=this._dialogQueue.shift(); this.openDialog(n.name, n.text); }
-        else { this._welcomeActive = false; }
+        this.advanceDialog();
         return;
       }
       if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
@@ -950,12 +991,11 @@ window.LeknesScene = class extends Phaser.Scene {
           this.closeAll();
           this.openDialog('Travel Agent', 'Enjoy Tromsø — the Arctic capital! Use the Ferry Captain to travel there.');
           return;
-        }
-        this.closeAll();
-      }
-      return;
-    }
-
+          }
+          this.advanceDialog();
+          }
+          return;
+          }
     if (this.playerTileX!==this._hTx||this.playerTileY!==this._hTy||this.facing!==this._hFacing) {
       this._hTx=this.playerTileX; this._hTy=this.playerTileY; this._hFacing=this.facing;
       this._canFish=this.isFishingSpot(); this._nearNPC=this.getNearbyNPC();

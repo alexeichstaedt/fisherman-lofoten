@@ -87,8 +87,9 @@
   // Top 42% for game, remaining for controls
   gameContainer.style.height  = '42vh';
   gameContainer.style.flex    = '0 0 42vh';
-  controlsPanel.style.display = 'block';
-  controlsPanel.style.height  = 'calc(58vh - 2px)';
+  controlsPanel.style.display        = 'block';
+  controlsPanel.style.height         = 'calc(58vh - 2px)';
+  controlsPanel.style.paddingBottom  = 'env(safe-area-inset-bottom, 0px)';
 
   // ── Button factory ────────────────────────────────────────────────────────
   function btn(label, bg, extra = '') {
@@ -130,13 +131,18 @@
     } else if (dir === 'center') {
       cell.style.cssText = 'width:14vw; height:14vw; background:rgba(255,255,255,0.06); border-radius:6px; touch-action:none;';
     } else {
-      cell.innerHTML = arrows[dir];
+      const span = document.createElement('span');
+      span.textContent = arrows[dir];
+      span.style.cssText = 'pointer-events:none; -webkit-user-select:none; user-select:none;';
+      cell.appendChild(span);
       cell.style.cssText = `
         width:14vw; height:14vw;
         display:flex; align-items:center; justify-content:center;
         font-size:18px; color:#fff; font-weight:bold;
         background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.2);
-        border-radius:8px; touch-action:none; user-select:none; cursor:pointer;`;
+        border-radius:8px; touch-action:none;
+        -webkit-user-select:none; user-select:none;
+        cursor:pointer; -webkit-tap-highlight-color:transparent;`;
       bindHeld(cell, dir);
     }
     dpad.appendChild(cell);
@@ -163,7 +169,7 @@
   // G is a no-op when no animal follows, so combining is safe.
   const btnStart = rectBtn('START', 'rgba(255,255,255,0.18)', `
     width:20vw; height:8vw; font-size:11px;
-    left:50%; bottom:6%; transform:translateX(-50%);`);
+    left:50%; bottom:18%; transform:translateX(-50%);`);
   btnStart.addEventListener('pointerdown', e => {
     e.preventDefault();
     fireDown('start'); setTimeout(() => fireUp('start'), 80);
@@ -174,13 +180,13 @@
   // ── Radio buttons (T = station, R = next song) ────────────────────────────
   const btnStation = rectBtn('📻 STN', 'rgba(251,191,36,0.50)', `
     width:22vw; height:8vw; font-size:10px;
-    right:4vw; bottom:18%;`);
+    right:4vw; bottom:30%;`);
   bindTap(btnStation, 'radio');
   controlsPanel.appendChild(btnStation);
 
   const btnSong = rectBtn('⏭ SONG', 'rgba(147,197,253,0.45)', `
     width:22vw; height:8vw; font-size:10px;
-    right:4vw; bottom:6%;`);
+    right:4vw; bottom:18%;`);
   bindTap(btnSong, 'skip');
   controlsPanel.appendChild(btnSong);
 

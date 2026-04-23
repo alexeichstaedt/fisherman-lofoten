@@ -67,9 +67,9 @@ window.KvalvikaScene = class extends Phaser.Scene {
     const travelBg   = this.add.rectangle(0,0,400,340,0x0f172a,0.97).setStrokeStyle(2,0x4ade80);
     this.travelTitle = this.add.text(0,-140,'Travel To...',{fontSize:'22px',color:'#4ade80',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelDests = ['Leknes','Reine','Kåkern','Henningsvær'];
-    this.travelTexts = this.travelDests.map((d,i)=>this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5));
+    this.travelTexts = this.travelDests.map((d,i)=>{ const t=this.add.text(0,-80+i*50,d,{fontSize:'18px',color:'#ffffff',fontFamily:'monospace'}).setOrigin(0.5); t.setInteractive({useHandCursor:true}).on('pointerdown',()=>{ if(!this.travelMenuOpen) return; this.travelIndex=i; this.updateTravelCursor(); this.executeTravel(d); }); return t; });
     this.travelCursor= this.add.text(0,0,'>',{fontSize:'16px',color:'#4ade80'});
-    this.travelHint  = this.add.text(0,140,'ENTER to travel  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
+    this.travelHint  = this.add.text(0,140,'Tap or ENTER to travel  ·  ESC cancel',{fontSize:'13px',color:'#64748b',fontFamily:'monospace'}).setOrigin(0.5);
     this.travelLayer = this.add.container(400,320).setDepth(51).setVisible(false).setScrollFactor(0);
     this.travelLayer.add([travelBg,this.travelTitle,...this.travelTexts,this.travelCursor,this.travelHint]);
     this.travelIndex = 0;

@@ -653,20 +653,31 @@ window.TromsoScene = class extends Phaser.Scene {
     const lineH = 24;
 
     if (this.recordShopTab === 0) {
-      const t1 = this.add.text(cx, contentY + 20, '📻 Radio', {
-        fontSize:'15px', color:'#fef08a', fontFamily:'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      const t2 = this.add.text(cx, contentY + 50, 'You start with a radio!', {
-        fontSize:'13px', color:'#4ade80', fontFamily:'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      const t3 = this.add.text(cx, contentY + 80,
-        'T — next station\nR — next song\n\nBuy records and make albums\nto unlock more stations.',
-        { fontSize:'12px', color:'#94a3b8', fontFamily:'monospace', align:'center' }
-      ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      const hint = this.add.text(cx, cy + H/2 - 22, '◄► tabs  ESC close', {
-        fontSize:'10px', color:'#64748b', fontFamily:'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      this._recordShopObjects.push(t1, t2, t3, hint);
+      // Shop tab — sell Radio
+      const hasRadio = this.state.hasRadio;
+      if (hasRadio) {
+        const t = this.add.text(cx, contentY + 40, '📻 Radio — Already Owned', {
+          fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        const hint = this.add.text(cx, contentY + 70, 'Tune stations with R key while exploring', {
+          fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        this._recordShopObjects.push(t, hint);
+      } else {
+        const itemT = this.add.text(cx, contentY + 30, '📻 Radio', {
+          fontSize: '15px', color: '#fef08a', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        const priceT = this.add.text(cx, contentY + 54, `${(window.RADIO_PRICE_NOK).toLocaleString()} NOK`, {
+          fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        const descT = this.add.text(cx, contentY + 76, 'Tune into records, albums & game music', {
+          fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        const hint = this.add.text(cx, cy + H/2 - 22, 'ENTER buy  ◄► tabs  ESC close', {
+          fontSize: '10px', color: '#64748b', fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+        this._recordShopObjects.push(itemT, priceT, descT, hint);
+      }
 
     } else if (this.recordShopTab === 1) {
       const forSale = (window.RECORDS_FOR_SALE || []).filter(r => !(this.state.ownedRecords || []).includes(r));
@@ -859,7 +870,21 @@ window.TromsoScene = class extends Phaser.Scene {
     }
 
     if (this.recordShopTab === 0) {
-      // Radio info tab — no purchase action needed
+      if (just(this.enterKey) && !this.state.hasRadio) {
+        if (this.state.money < window.RADIO_PRICE_NOK) {
+          this.openDialog('Record Store', `Not enough NOK! You need ${window.RADIO_PRICE_NOK.toLocaleString()} NOK.`);
+          this.recordShopOpen = false;
+          return;
+        }
+        this.state.money -= window.RADIO_PRICE_NOK;
+        this.state.hasRadio = true;
+        this.state.radioStation = 0;
+        SaveSystem.saveNow(this.state);
+        this.game.events.emit('updateUI', this.state);
+        this._renderRecordShop();
+        this.showMsg('📻 Radio purchased! Press R to tune.');
+        return;
+      }
       return;
     }
 
