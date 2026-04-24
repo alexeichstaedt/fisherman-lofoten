@@ -185,7 +185,15 @@ window.CharacterSelectScene = class extends Phaser.Scene {
     inputEl.maxLength = 15;
     inputEl.placeholder = 'Your name...';
     inputEl.autocomplete = 'off';
-    inputEl.style.cssText = [
+    // On mobile: position near bottom so iOS keyboard slides up without moving the game.
+    // On desktop: center on screen. We detect mobile via pointer coarse.
+    const isMobileInput = window.matchMedia('(pointer: coarse)').matches;
+    inputEl.style.cssText = isMobileInput ? [
+      'position:fixed', 'left:50%', 'bottom:42vh', 'transform:translateX(-50%)',
+      'width:70vw', 'max-width:300px', 'padding:10px 14px', 'font-size:18px', 'font-family:monospace',
+      'background:#1e293b', 'color:#fef08a', 'border:2px solid #38bdf8',
+      'border-radius:10px', 'outline:none', 'text-align:center', 'z-index:9999'
+    ].join(';') : [
       'position:fixed', 'left:50%', 'top:50%', 'transform:translate(-50%,-50%)',
       'width:260px', 'padding:12px 16px', 'font-size:22px', 'font-family:monospace',
       'background:#1e293b', 'color:#fef08a', 'border:2px solid #38bdf8',
@@ -195,7 +203,12 @@ window.CharacterSelectScene = class extends Phaser.Scene {
 
     const confirmBtn = document.createElement('button');
     confirmBtn.textContent = '✓ Confirm';
-    confirmBtn.style.cssText = [
+    confirmBtn.style.cssText = isMobileInput ? [
+      'position:fixed', 'left:50%', 'bottom:calc(42vh - 56px)', 'transform:translateX(-50%)',
+      'padding:12px 32px', 'font-size:16px', 'font-family:monospace',
+      'background:#1e3a5f', 'color:#4ade80', 'border:2px solid #4ade80',
+      'border-radius:10px', 'cursor:pointer', 'z-index:9999', 'touch-action:manipulation'
+    ].join(';') : [
       'position:fixed', 'left:50%', 'top:calc(50% + 60px)', 'transform:translateX(-50%)',
       'padding:12px 32px', 'font-size:16px', 'font-family:monospace',
       'background:#1e3a5f', 'color:#4ade80', 'border:2px solid #4ade80',
@@ -205,7 +218,12 @@ window.CharacterSelectScene = class extends Phaser.Scene {
 
     const skipBtn = document.createElement('button');
     skipBtn.textContent = 'Skip';
-    skipBtn.style.cssText = [
+    skipBtn.style.cssText = isMobileInput ? [
+      'position:fixed', 'left:50%', 'bottom:calc(42vh - 104px)', 'transform:translateX(-50%)',
+      'padding:8px 24px', 'font-size:14px', 'font-family:monospace',
+      'background:transparent', 'color:#64748b', 'border:1px solid #475569',
+      'border-radius:8px', 'cursor:pointer', 'z-index:9999', 'touch-action:manipulation'
+    ].join(';') : [
       'position:fixed', 'left:50%', 'top:calc(50% + 108px)', 'transform:translateX(-50%)',
       'padding:8px 24px', 'font-size:14px', 'font-family:monospace',
       'background:transparent', 'color:#64748b', 'border:1px solid #475569',

@@ -95,10 +95,11 @@ window.BootScene = class extends Phaser.Scene {
     });
     this.cursor = this.add.text(0,0,'>', {fontSize:'24px',color:'#ffff00'});
     this.updateCursor();
-    this.add.text(400, 600, 'Tap to select  ·  ↑↓ + ENTER', { fontSize:'13px', color:'#475569' }).setOrigin(0.5);
+    this.add.text(400, 600, 'Tap to select  ·  ↑↓ + A / ENTER', { fontSize:'13px', color:'#475569' }).setOrigin(0.5);
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.cooldown = 0;
   }
 
@@ -113,7 +114,7 @@ window.BootScene = class extends Phaser.Scene {
     if (this.cooldown > 0) return;
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.selectedIndex=(this.selectedIndex-1+this.menuItems.length)%this.menuItems.length; this.updateCursor(); this.cooldown=150; }
     else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.selectedIndex=(this.selectedIndex+1)%this.menuItems.length; this.updateCursor(); this.cooldown=150; }
-    else if (Phaser.Input.Keyboard.JustDown(this.enterKey)) { this.cooldown=300; this.confirmSelection(); }
+    else if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this.cooldown=300; this.confirmSelection(); }
   }
 
   confirmSelection() {
