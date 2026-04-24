@@ -33,7 +33,7 @@ window.UIScene = class extends Phaser.Scene {
 
     // Radio — compact, same column/width as trophies, aligned with aura row
     this.radioIcon     = this.add.text(540, 50, '📻', { fontSize: '10px', fontFamily: 'monospace' }).setOrigin(0, 0);
-    this.radioStText   = this.add.text(553, 50, 'Default BGM', { fontSize: '10px', color: '#fbbf24', fontFamily: 'monospace' }).setOrigin(0, 0);
+    this.radioStText   = this.add.text(553, 50, 'My Records', { fontSize: '10px', color: '#fbbf24', fontFamily: 'monospace' }).setOrigin(0, 0);
     this.radioSongText = this.add.text(0, -999, '', { fontSize: '9px', color: '#93c5fd', fontFamily: 'monospace' }).setOrigin(0, 0);
     this.radioHint     = this.add.text(0, -999, '', { fontSize: '8px', color: '#475569', fontFamily: 'monospace' }).setOrigin(0, 0);
 
@@ -109,14 +109,11 @@ window.UIScene = class extends Phaser.Scene {
 
   _getRadioStations() {
     const s = this.state || {};
-    // Station 0: Default BGM (single track)
-    const stations = [{ name: 'Default BGM', songs: ['Default BGM'] }];
-    // Station 1: My Records — all owned records as a playlist
+    const stations = [];
+    // Station 0: My Records — all owned records as a playlist
     const records = s.ownedRecords || [];
-    if (records.length > 0) {
-      stations.push({ name: 'My Records', songs: [...records] });
-    }
-    // Stations 2-4: each made album (up to 3)
+    stations.push({ name: 'My Records', songs: records.length > 0 ? [...records] : [] });
+    // Stations 1+: each made album (up to 3)
     (s.myAlbums || []).forEach(album => {
       stations.push({ name: album.title, songs: album.tracks || [] });
     });
