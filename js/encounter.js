@@ -375,6 +375,9 @@ window.BushEncounterMixin = {
       const _bHours = 1 + Math.floor(Math.random() * 24);
       this.state.baddiesCaught.unshift({ name: _bName, level: d.level, sprite: d.spriteKey, expiresAt: Date.now() + _bHours * 3600000 });
       this.state.baddiesCaught = this.state.baddiesCaught.slice(0, 10);
+      if (this.state.baddiesCaught.length >= 10 && window.checkAndAwardBadge(this.state, 'baddie-collector', '10 Baddies')) {
+        resultMsg += '\n🏆 BADGE: Baddie Collector!';
+      }
     } else {
       auraChange = -d.level;
       resultMsg  = `Wrong answer! She left... 😔 -${d.level} AURA`;
@@ -602,6 +605,9 @@ window.BushEncounterMixin = {
       if (!this.state.hatersDefeated) this.state.hatersDefeated = [];
       this.state.hatersDefeated.unshift({ name: `Hater Lv${d.level}`, level: d.level, sprite: d.spriteKey });
       this.state.hatersDefeated = this.state.hatersDefeated.slice(0, 10);
+      if (this.state.hatersDefeated.length >= 10 && window.checkAndAwardBadge(this.state, 'hater-slayer', '10 Haters')) {
+        resultMsg += '\n🏆 BADGE: Hater Slayer!';
+      }
     } else {
       auraChange = -d.level;
       resultMsg = `${strikeDetail}\nThe hater beat you! 💀 -${d.level} AURA`;
@@ -674,6 +680,7 @@ window.AnimalFollowMixin = {
   initAnimalFollow() {
     this.followingAnimal = null;
     this._animalGKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
+    this._escKeyAnimal = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
     const id = this.state.followAnimalId;
     if (id == null) return;
     const animalDef = window.ANIMALS.find(a => a.id === id);
@@ -690,14 +697,18 @@ window.AnimalFollowMixin = {
 
   checkAnimalFollowInput() {
     if (!this._animalGKey) return;
-    if (Phaser.Input.Keyboard.JustDown(this._animalGKey) && this.followingAnimal) {
-      const def = window.ANIMALS.find(a => a.id === this.followingAnimal.id) || {};
-      this.followingAnimal.sprite.destroy();
-      this.followingAnimal = null;
-      this.state.followAnimalId = null;
-      SaveSystem.save(this.state);
-      this.showMsg('🏡 ' + (def.name || 'Your animal') + ' returned to Kåkern!');
-    }
+    const gJust = Phaser.Input.Keyboard.JustDown(this._animalGKey);
+    const escJust = this._escKeyAnimal && Phaser.Input.Keyboard.JustDown(this._escKeyAnimal);
+    if ((!gJust && !escJust) || !this.followingAnimal) return;
+    const hasMenu = !!(this.shopOpen || this.travelMenuOpen || this.dialogOpen || this.museumOpen ||
+                       this.recordShopOpen || this.duffelMenuOpen || this.dragShopOpen || this.marketOpen);
+    if (escJust && hasMenu) return;
+    const def = window.ANIMALS.find(a => a.id === this.followingAnimal.id) || {};
+    this.followingAnimal.sprite.destroy();
+    this.followingAnimal = null;
+    this.state.followAnimalId = null;
+    SaveSystem.save(this.state);
+    this.showMsg('🏡 ' + (def.name || 'Your animal') + ' returned to Kåkern!');
   },
 
   updateAnimalFollow(lastTile) {
@@ -781,6 +792,7 @@ window.BaddieFollowMixin = {
   initBaddieFollow() {
     this.followingBaddie = null;
     this._gKeyBaddie = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
+    this._escKeyBaddie = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
     const name = this.state.followingBaddieName;
     if (!name) return;
     const b = (this.state.baddiesCaught || []).find(x => x.name === name);
@@ -798,13 +810,18 @@ window.BaddieFollowMixin = {
 
   checkBaddieFollowInput() {
     if (!this._gKeyBaddie || !this.followingBaddie) return;
-    if (Phaser.Input.Keyboard.JustDown(this._gKeyBaddie)) {
-      this.followingBaddie.sprite.destroy();
-      this.followingBaddie = null;
-      this.state.followingBaddieName = null;
-      SaveSystem.save(this.state);
-      this.showMsg('💅 She went home.');
-    }
+    const gJust = Phaser.Input.Keyboard.JustDown(this._gKeyBaddie);
+    const escJust = this._escKeyBaddie && Phaser.Input.Keyboard.JustDown(this._escKeyBaddie);
+    if (!gJust && !escJust) return;
+    // Only send home via ESC when no menus are open
+    const hasMenu = !!(this.shopOpen || this.travelMenuOpen || this.dialogOpen || this.museumOpen ||
+                       this.recordShopOpen || this.duffelMenuOpen || this.dragShopOpen || this.marketOpen);
+    if (escJust && hasMenu) return;
+    this.followingBaddie.sprite.destroy();
+    this.followingBaddie = null;
+    this.state.followingBaddieName = null;
+    SaveSystem.save(this.state);
+    this.showMsg('💅 She went home.');
   },
 
   updateBaddieFollow(lastTile) {

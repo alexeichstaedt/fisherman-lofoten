@@ -490,6 +490,9 @@ window.KakernScene = class extends Phaser.Scene {
     const _xpMult = getXPBonus(this.state.companion, 'kåkern');
     const _xpFinal = Math.round(result.xp * _xpMult);
     const leveled = addXP(this.state, _xpFinal);
+    this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
+    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
+    if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Kåkern');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
@@ -927,8 +930,9 @@ window.KakernScene = class extends Phaser.Scene {
           return;
         }
       }
-      // Baddies tab: ENTER to take/send home top baddie
-      if (this.duffelTabIdx === 1 && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      // Baddies tab: ENTER/SPACE to take/send home top baddie
+      const _dOK = Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
+      if (this.duffelTabIdx === 1 && _dOK) {
         const _sortedB = [...(this.state.baddiesCaught || [])].sort((a, b) => b.level - a.level);
         const _top = _sortedB[0];
         if (_top) {
@@ -938,6 +942,18 @@ window.KakernScene = class extends Phaser.Scene {
             SaveSystem.save(this.state);
             this.showMsg('💅 ' + _top.name + ' went home.');
           } else {
+            if ((this.state.money || 0) < 1000) {
+              this.showMsg('💸 Need 1,000 NOK to take her out!');
+              this.closeDuffelMenu();
+              return;
+            }
+            this.state.money -= 1000;
+            // Silent aura adjustment
+            if (_top.level >= 6) {
+              this.state.aura = Math.min(100, (this.state.aura || 0) + 10);
+            } else {
+              this.state.aura = Math.max(-100, (this.state.aura || 0) - 10);
+            }
             if (this.followingBaddie) { this.followingBaddie.sprite.destroy(); this.followingBaddie = null; }
             this.state.followingBaddieName = _top.name;
             const TS = GAME_DATA.TILE_SIZE;
@@ -953,8 +969,8 @@ window.KakernScene = class extends Phaser.Scene {
         this.closeDuffelMenu();
         return;
       }
-      // Upgrade tab: ENTER to confirm purchase
-      if (this.duffelTabIdx === 3 && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      // Upgrade tab: ENTER/SPACE to confirm purchase
+      if (this.duffelTabIdx === 3 && _dOK) {
         if (!this.state.hasBadderCabin && (this.state.money || 0) >= 1000000) {
           this.state.money -= 1000000;
           this.state.hasBadderCabin = true;

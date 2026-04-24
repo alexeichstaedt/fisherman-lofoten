@@ -38,8 +38,7 @@
 
   // Held key — smart tap/hold:
   // • Quick tap  → fires keydown + keyup burst = exactly 1 tile move
-  // • Hold 320ms+ → fires continuous keydown until released (tile tween is 160ms,
-  //   so 320ms = 2 tween durations before continuous kicks in, feels intentional)
+  // • Hold 150ms+ → fires continuous keydown until released
   function bindHeld(el, name) {
     let holdTimer = null;
     let continuous = false;
@@ -51,11 +50,11 @@
       // Immediate single-step burst
       fireDown(name);
       setTimeout(() => { if (!continuous) fireUp(name); }, 80);
-      // If still held after 320ms, switch to continuous mode
+      // If still held after 150ms, switch to continuous mode
       holdTimer = setTimeout(() => {
         continuous = true;
         fireDown(name); // re-engage for continuous movement
-      }, 320);
+      }, 150);
     });
 
     const release = e => {

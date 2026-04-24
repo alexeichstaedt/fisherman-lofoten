@@ -1507,6 +1507,13 @@ window.addXP = function(state, amount) {
   return leveled;
 };
 
+window.checkAndAwardBadge = function(state, id, label) {
+  if (!Array.isArray(state.badges)) state.badges = [];
+  if (state.badges.includes(id)) return false;
+  state.badges.push(id);
+  return true;
+};
+
 window.addFishAuraMiss = function(state, fish, magical) {
   if (typeof state.aura === 'undefined') state.aura = 20;
   const isTrophy = fish && GAME_DATA.TROPHY_FISH.includes(fish.name);

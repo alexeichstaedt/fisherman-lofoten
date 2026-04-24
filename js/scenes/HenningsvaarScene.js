@@ -273,6 +273,9 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     const _xpMult = getXPBonus(this.state.companion, 'henningsvaer');
     const _xpFinal = Math.round(result.xp * _xpMult);
     const leveled = addXP(this.state, _xpFinal);
+    this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
+    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
+    if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Henningsvær');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
@@ -665,14 +668,14 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     if (this.travelMenuOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.travelIndex=(this.travelIndex-1+this.travelDests.length)%this.travelDests.length; this.updateTravelCursor(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.travelIndex=(this.travelIndex+1)%this.travelDests.length; this.updateTravelCursor(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeTravel(this.travelDests[this.travelIndex]);
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeTravel(this.travelDests[this.travelIndex]);
       return;
     }
 
     if (this.jacketShopOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.jacketShopIndex=(this.jacketShopIndex-1+this.JACKETS.length)%this.JACKETS.length; this.updateJacketShopCursor(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.jacketShopIndex=(this.jacketShopIndex+1)%this.JACKETS.length; this.updateJacketShopCursor(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeJacketShop();
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeJacketShop();
       return;
     }
 
@@ -695,7 +698,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
         }
         this._renderSwapShop();
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         this._executeSwap();
       }
       return;
@@ -735,7 +738,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
         this.sushiCursor = (this.sushiCursor + 1) % inv.length;
         this._renderSushiMenu();
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         this._executeSushi();
       }
       return;

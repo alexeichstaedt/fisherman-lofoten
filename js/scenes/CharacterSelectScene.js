@@ -79,13 +79,14 @@ window.CharacterSelectScene = class extends Phaser.Scene {
       fontSize: '13px', color: '#94a3b8', fontFamily: 'monospace'
     }).setOrigin(0.5);
 
-    this.add.text(400, 620, 'Tap card to select  ·  Tap again to confirm  ·  ENTER', {
+    this.add.text(400, 620, 'Tap card to select  ·  Tap again to confirm  ·  ENTER / SPACE', {
       fontSize: '13px', color: '#475569', fontFamily: 'monospace'
     }).setOrigin(0.5);
 
     // Input
     this.cursors = this.input.keyboard.createCursorKeys();
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.cooldown = 0;
 
     this.updateSelection();
@@ -149,7 +150,7 @@ window.CharacterSelectScene = class extends Phaser.Scene {
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
       if (this.selectedIndex + cols < this.characters.length) this.selectedIndex += cols;
       this.updateSelection(); this.cooldown = 150;
-    } else if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+    } else if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       this.confirmSelection();
     }
   }

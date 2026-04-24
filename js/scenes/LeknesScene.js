@@ -239,6 +239,9 @@ window.LeknesScene = class extends Phaser.Scene {
     const _xpMult = getXPBonus(this.state.companion, 'leknes');
     const _xpFinal = Math.round(result.xp * _xpMult);
     const leveled = addXP(this.state, _xpFinal);
+    this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
+    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
+    if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Leknes');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
@@ -931,27 +934,29 @@ window.LeknesScene = class extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.travelIndex=(this.travelIndex-1+this.travelDests.length)%this.travelDests.length; this.updateTravelCursor(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.travelIndex=(this.travelIndex+1)%this.travelDests.length; this.updateTravelCursor(); }
       if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeTravel(this.travelDests[this.travelIndex]);
+      if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeTravel(this.travelDests[this.travelIndex]);
       return;
     }
 
     if (this.shopOpen) {
       const numTabs = 5;
+      const _shopOK = Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
       if (Phaser.Input.Keyboard.JustDown(this.cursors.left))  { this.shopTab=(this.shopTab-1+numTabs)%numTabs; this.renderShopTab(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) { this.shopTab=(this.shopTab+1)%numTabs; this.renderShopTab(); }
-      if (this.shopTab===0 && Phaser.Input.Keyboard.JustDown(this.enterKey)) this.sellAllFish();
+      if (this.shopTab===0 && _shopOK) this.sellAllFish();
       if (this.shopTab===1) {
         if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.rodIndex=(this.rodIndex-1+this.rodItems.length)%this.rodItems.length; this.updateRodShop(); }
         if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.rodIndex=(this.rodIndex+1)%this.rodItems.length; this.updateRodShop(); }
-        if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.buyRod();
+        if (_shopOK) this.buyRod();
       }
-      if (this.shopTab===2 && Phaser.Input.Keyboard.JustDown(this.enterKey)) this.buyBoat();
+      if (this.shopTab===2 && _shopOK) this.buyBoat();
       if (this.shopTab===3) {
         if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.compIndex=(this.compIndex-1+this.compItems.length)%this.compItems.length; this.updateCompanionShop(); }
         if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.compIndex=(this.compIndex+1)%this.compItems.length; this.updateCompanionShop(); }
-        if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.buyCompanion();
+        if (_shopOK) this.buyCompanion();
       }
       if (this.shopTab===4) {
-        if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.buyAnimal();
+        if (_shopOK) this.buyAnimal();
       }
       return;
     }
@@ -960,13 +965,34 @@ window.LeknesScene = class extends Phaser.Scene {
       const items = MUSEUM_ITEMS;
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this._museumIndex = (this._museumIndex - 1 + items.length) % items.length; this._renderMuseum(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this._museumIndex = (this._museumIndex + 1) % items.length; this._renderMuseum(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) { this._buyMuseumItem(); }
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this._buyMuseumItem(); }
       return;
     }
 
     if (this.dialogOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.escKey)) { if (this._welcomeActive) return; this._dialogQueue=[]; this.tournamentConfirmOpen=false; this.travelAgentConfirmOpen=false; this.closeAll(); return; }
       if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+        if (this.tournamentConfirmOpen) {
+          this.tournamentConfirmOpen = false;
+          this.closeAll();
+          this.state.inventory = [];
+          this.state.tournamentActive = true;
+          this.state.tournamentBestFish = null;
+          this.state.tournamentEndTime = Date.now() + 300000;
+          SaveSystem.saveNow(this.state);
+          this.game.events.emit('updateUI', this.state);
+          return;
+        }
+        if (this.travelAgentConfirmOpen) {
+          this.travelAgentConfirmOpen = false;
+          this.state.money -= GAME_DATA.TROMSO_TICKET_PRICE;
+          this.state.hasTromsoTicket = true;
+          SaveSystem.save(this.state);
+          this.game.events.emit('updateUI', this.state);
+          this.closeAll();
+          this.openDialog('Travel Agent', 'Enjoy Tromsø — the Arctic capital! Use the Ferry Captain to travel there.');
+          return;
+        }
         this.advanceDialog();
         return;
       }

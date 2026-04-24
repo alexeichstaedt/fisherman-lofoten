@@ -253,6 +253,9 @@ window.TromsoScene = class extends Phaser.Scene {
     result.fish.magical = magical;
     xp = Math.round(xp * getXPBonus(this.state.companion, 'tromso'));
     const leveled = addXP(this.state, xp);
+    this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
+    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
+    if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Tromsø');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
@@ -452,12 +455,11 @@ window.TromsoScene = class extends Phaser.Scene {
         this._updateSnowballFightCursor();
         return;
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         if (this._snowballFightChoice === 0) { this._startSnowballFight(); }
         else { this.closeAll(); }
         return;
       }
-      if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this.closeAll(); return; }
       return;
     }
 
@@ -467,7 +469,42 @@ window.TromsoScene = class extends Phaser.Scene {
     }
 
     if (this.dialogOpen) {
-      if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this.closeAll(); return; }
+      if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+        if (this.fishBuyerConfirmOpen) {
+          this.fishBuyerConfirmOpen = false;
+          const inv = this.state.inventory;
+          const total = inv.reduce((s,f) => s + (f.value || f.weight * GAME_DATA.FISH_PRICE_PER_KG), 0);
+          this.state.money += total;
+          this.state.inventory = [];
+          SaveSystem.save(this.state);
+          this.game.events.emit('updateUI', this.state);
+          this.closeAll();
+          this.showMsg('Sold all fish for ' + total.toLocaleString() + ' NOK!');
+          return;
+        }
+        if (this.returnConfirmOpen) {
+          this.returnConfirmOpen = false;
+          this.state.hasTromsoTicket = false;
+          this.state.location = 'leknes';
+          this.state.x = 12; this.state.y = 18;
+          SaveSystem.saveNow(this.state);
+          this.closeAll();
+          window.showTravelAnim(this, 'plane', () => { this.scene.start('LeknesScene', {spawnX: 12, spawnY: 18}); });
+          return;
+        }
+        if (this.foodConfirmOpen) {
+          this.foodConfirmOpen = false;
+          this.state.money -= 200;
+          const leveled = addXP(this.state, 500);
+          if (leveled) this.game.events.emit('levelUp', this.state.level);
+          SaveSystem.save(this.state);
+          this.game.events.emit('updateUI', this.state);
+          this.closeAll();
+          this.showMsg('Delicious reindeer meat! +500 XP');
+          return;
+        }
+        this.closeAll(); return;
+      }
       if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
         if (this.fishBuyerConfirmOpen) {
           this.fishBuyerConfirmOpen = false;
@@ -653,31 +690,14 @@ window.TromsoScene = class extends Phaser.Scene {
     const lineH = 24;
 
     if (this.recordShopTab === 0) {
-      // Shop tab — sell Radio
-      const hasRadio = this.state.hasRadio;
-      if (hasRadio) {
-        const t = this.add.text(cx, contentY + 40, '📻 Radio — Already Owned', {
-          fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        const hint = this.add.text(cx, contentY + 70, 'Tune stations with R key while exploring', {
-          fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        this._recordShopObjects.push(t, hint);
-      } else {
-        const itemT = this.add.text(cx, contentY + 30, '📻 Radio', {
-          fontSize: '15px', color: '#fef08a', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        const priceT = this.add.text(cx, contentY + 54, `${(window.RADIO_PRICE_NOK).toLocaleString()} NOK`, {
-          fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        const descT = this.add.text(cx, contentY + 76, 'Tune into records, albums & game music', {
-          fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        const hint = this.add.text(cx, cy + H/2 - 22, 'ENTER buy  ◄► tabs  ESC close', {
-          fontSize: '10px', color: '#64748b', fontFamily: 'monospace'
-        }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-        this._recordShopObjects.push(itemT, priceT, descT, hint);
-      }
+      // Radio is always included — show status only
+      const t = this.add.text(cx, contentY + 40, '📻 Radio — Included with your player kit!', {
+        fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
+      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      const hint = this.add.text(cx, contentY + 70, 'Tune stations with R key while exploring', {
+        fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
+      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
+      this._recordShopObjects.push(t, hint);
 
     } else if (this.recordShopTab === 1) {
       const forSale = (window.RECORDS_FOR_SALE || []).filter(r => !(this.state.ownedRecords || []).includes(r));
@@ -870,21 +890,7 @@ window.TromsoScene = class extends Phaser.Scene {
     }
 
     if (this.recordShopTab === 0) {
-      if (just(this.enterKey) && !this.state.hasRadio) {
-        if (this.state.money < window.RADIO_PRICE_NOK) {
-          this.openDialog('Record Store', `Not enough NOK! You need ${window.RADIO_PRICE_NOK.toLocaleString()} NOK.`);
-          this.recordShopOpen = false;
-          return;
-        }
-        this.state.money -= window.RADIO_PRICE_NOK;
-        this.state.hasRadio = true;
-        this.state.radioStation = 0;
-        SaveSystem.saveNow(this.state);
-        this.game.events.emit('updateUI', this.state);
-        this._renderRecordShop();
-        this.showMsg('📻 Radio purchased! Press R to tune.');
-        return;
-      }
+      // Radio is always included — no purchase needed
       return;
     }
 
@@ -892,7 +898,7 @@ window.TromsoScene = class extends Phaser.Scene {
       const forSale = (window.RECORDS_FOR_SALE || []).filter(r => !(this.state.ownedRecords || []).includes(r));
       if (just(this.cursors.up))   { this._albumCursor = Math.max(0, this._albumCursor - 1); this._renderRecordShop(); return; }
       if (just(this.cursors.down)) { this._albumCursor = Math.min(forSale.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
-      if (just(this.enterKey)) {
+      if (just(this.enterKey) || just(this.spaceKey)) {
         const rec = forSale[this._albumCursor];
         if (!rec) return;
         if (this.state.money < window.RECORD_PRICE_NOK) {
@@ -910,6 +916,8 @@ window.TromsoScene = class extends Phaser.Scene {
         this.state.aura = Math.max(-100, aura - window.RECORD_PRICE_AURA);
         if (!this.state.ownedRecords) this.state.ownedRecords = [];
         this.state.ownedRecords.push(rec);
+        const leveled = addXP(this.state, 1000);
+        if (leveled) this.game.events.emit('levelUp', this.state.level);
         SaveSystem.saveNow(this.state);
         this.game.events.emit('updateUI', this.state);
         this._albumCursor = 0;
