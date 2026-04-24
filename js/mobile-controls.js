@@ -83,12 +83,18 @@
   const gameContainer = document.getElementById('game-container');
   const controlsPanel = document.getElementById('controls-panel');
 
+  // Inject a style that pushes the entire body up past Safari's bottom toolbar.
+  // env(safe-area-inset-bottom) covers the home indicator (~34px) but NOT the
+  // Safari nav bar (~50px). Adding 54px covers both on all iPhone models.
+  const _safeStyle = document.createElement('style');
+  _safeStyle.textContent = 'body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 54px) !important; }';
+  document.head.appendChild(_safeStyle);
+
   // Top 42% for game, remaining for controls
   gameContainer.style.height  = '42vh';
   gameContainer.style.flex    = '0 0 42vh';
   controlsPanel.style.display        = 'block';
   controlsPanel.style.height         = 'calc(58vh - 2px)';
-  controlsPanel.style.paddingBottom  = 'env(safe-area-inset-bottom, 0px)';
 
   // ── Button factory ────────────────────────────────────────────────────────
   function btn(label, bg, extra = '') {
