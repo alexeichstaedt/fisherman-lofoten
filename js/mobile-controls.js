@@ -83,24 +83,16 @@
   const gameContainer = document.getElementById('game-container');
   const controlsPanel = document.getElementById('controls-panel');
 
-  // Use visualViewport.height = actual visible area BETWEEN browser bars.
-  // This avoids the black-space / cut-off problem caused by mixing vh + body padding.
-  function layoutMobile() {
-    const vv = window.visualViewport;
-    const totalH = Math.floor(vv ? vv.height : window.innerHeight);
-    document.body.style.height = totalH + 'px';
-    const gameH = Math.floor(totalH * 0.42);
-    const ctrlH = totalH - gameH - 2;
-    gameContainer.style.height = gameH + 'px';
-    gameContainer.style.flex   = '0 0 ' + gameH + 'px';
-    controlsPanel.style.height = ctrlH + 'px';
-  }
-  layoutMobile();
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', layoutMobile);
-  } else {
-    window.addEventListener('resize', layoutMobile);
-  }
+  // dvh (dynamic viewport height) = viewport height at its smallest (all browser
+  // chrome visible). This means content never bleeds behind Safari's toolbars.
+  // No JS math needed — the CSS unit handles iOS Safari correctly natively.
+  const _safeStyle = document.createElement('style');
+  _safeStyle.textContent = [
+    'body { height: 100dvh !important; padding-bottom: 0 !important; }',
+    '#game-container { height: 42dvh !important; flex: 0 0 42dvh !important; }',
+    '#controls-panel { display: block !important; height: calc(58dvh - 2px) !important; }'
+  ].join(' ');
+  document.head.appendChild(_safeStyle);
 
   controlsPanel.style.display = 'block';
 
