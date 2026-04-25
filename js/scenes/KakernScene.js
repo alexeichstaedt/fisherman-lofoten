@@ -1027,14 +1027,14 @@ window.KakernScene = class extends Phaser.Scene {
     if (this.travelMenuOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.travelIndex=(this.travelIndex-1+this.travelDests.length)%this.travelDests.length; this.updateTravelCursor(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.travelIndex=(this.travelIndex+1)%this.travelDests.length; this.updateTravelCursor(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeTravel(this.travelDests[this.travelIndex]);
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeTravel(this.travelDests[this.travelIndex]);
       return;
     }
 
     if (this.cabinMenuOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.cabinMenuIndex=(this.cabinMenuIndex-1+window.RENTAL_CABINS.length+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.cabinMenuIndex=(this.cabinMenuIndex+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeCabinPurchase();
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeCabinPurchase();
       return;
     }
 
