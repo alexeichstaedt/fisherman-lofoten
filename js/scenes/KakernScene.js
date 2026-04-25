@@ -637,7 +637,7 @@ window.KakernScene = class extends Phaser.Scene {
     this.state.followAnimalId = null; // animals stay in Kåkern
     SaveSystem.saveNow(this.state);
     this.closeAll();
-    this.scene.start(sceneMap[dest] || 'LeknesScene', {spawnX: spawn.x, spawnY: spawn.y});
+    window.showTravelAnim(this, 'ferry', () => { this.scene.start(sceneMap[dest] || 'LeknesScene', {spawnX: spawn.x, spawnY: spawn.y}); });
   }
 
 
