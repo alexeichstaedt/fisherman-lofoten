@@ -1,6 +1,6 @@
 // Fisherman: Lofoten — © 2026 Ikke Musikk Eichstaedt. All rights reserved.
 window.SaveSystem = {
-  DEFAULT: { playerName:'Ikke Musikk', level:1, xp:0, money:1000, rod:null, hasBoat:false, inventory:[], trophies:[], top10:[], grandTrophy:false, location:'leknes', x:14, y:14, characterKey:'ikke-musikk', companion:null, animals:[], hasTromsoTicket:false, followAnimalId:null, usedIdioms:[], ownedJackets:[], ownedCabins:[], cabinEarnings:0, hasFerryPass:false, hasSeenWelcome:false, hasReceivedStarterKit:false, aura: 20, playerItems: [], baddiesCaught: [], hatersDefeated: [], usaPassportTx: null, norPassportTx: null, norPassportTy: null, hasUsaPassport: false, hasNorPassport: false, tournamentActive: false, tournamentBestFish: null, tournamentEndTime: null, ownedRecords: ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'], myAlbums: [], hasRadio: true, radioStation: 0, radioSongIndex: 0, dragCatches: [], hasKvalvikaKey: false, hasBadderCabin: false, hasTromsoSongs: false, followingBaddieName: null, skilpaddeLastPlayed: null, totalFishCaught: 0, badges: [] },
+  DEFAULT: { playerName:'Ikke Musikk', level:1, xp:0, money:1000, rod:null, hasBoat:false, inventory:[], trophies:[], top10:[], grandTrophy:false, location:'leknes', x:14, y:14, characterKey:'ikke-musikk', companion:null, animals:[], hasTromsoTicket:false, followAnimalId:null, usedIdioms:[], ownedJackets:[], ownedCabins:[], cabinEarnings:0, hasFerryPass:false, hasSeenWelcome:false, hasReceivedStarterKit:false, aura: 20, playerItems: [], baddiesCaught: [], hatersDefeated: [], usaPassportTx: null, norPassportTx: null, norPassportTy: null, hasUsaPassport: false, hasNorPassport: false, tournamentActive: false, tournamentBestFish: null, tournamentEndTime: null, ownedRecords: ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'], myAlbums: [], hasRadio: true, radioStation: 0, radioSongIndex: 0, dragCatches: [], hasKvalvikaKey: false, hasBadderCabin: false, hasTromsoSongs: false, followingBaddieName: null, skilpaddeLastPlayed: null, totalFishCaught: 0, badges: [], tournamentBestPlace: null },
   _timer: null,
   _pending: null,
   save(s) {
@@ -50,6 +50,7 @@ window.SaveSystem = {
     if (typeof d.hasBadderCabin === 'undefined') d.hasBadderCabin = false;
     if (typeof d.totalFishCaught !== 'number') d.totalFishCaught = 0;
     if (!Array.isArray(d.badges)) d.badges = [];
+    if (typeof d.tournamentBestPlace === 'undefined') d.tournamentBestPlace = null;
     // Backwards compat: existing saves already have rod/travel — treat them as onboarded
     if (!('hasReceivedStarterKit' in raw)) {
       d.hasReceivedStarterKit = true;

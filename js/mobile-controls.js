@@ -169,16 +169,14 @@
   bindTap(btnFish, 'fish');
   controlsPanel.appendChild(btnFish);
 
-  // ── START / HOME button (Enter + G) ─────────────────────────────────────
-  // Fires Enter to confirm dialogs AND G to send animal home if one is following.
-  // G is a no-op when no animal follows, so combining is safe.
-  const btnStart = rectBtn('START', 'rgba(255,255,255,0.18)', `
+  // ── START / HOME button → Player Card ─────────────────────────────────────
+  // Opens the shareable player stats card overlay.
+  const btnStart = rectBtn('CARD', 'rgba(255,255,255,0.18)', `
     width:20vw; height:8vw; font-size:11px;
     left:50%; bottom:calc(30% + 14vw); transform:translateX(-50%);`);
   btnStart.addEventListener('pointerdown', e => {
     e.preventDefault();
-    fireDown('start'); setTimeout(() => fireUp('start'), 80);
-    fireDown('home');  setTimeout(() => fireUp('home'),  80);
+    if (window.showPlayerCard) window.showPlayerCard();
   });
   controlsPanel.appendChild(btnStart);
 
@@ -306,7 +304,7 @@
     // During alpha mode, hide fish/radio/song buttons (keyboard covers that area)
     const hideForAlpha = mode === 'alpha';
     [btnFish, btnStation, btnSong].forEach(el => {
-      el.style.display = hideForAlpha ? 'none' : '';
+      el.style.display = hideForAlpha ? 'none' : 'flex';
     });
   }
 

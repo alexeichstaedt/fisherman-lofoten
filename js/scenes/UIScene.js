@@ -186,6 +186,10 @@ window.UIScene = class extends Phaser.Scene {
     if (playerWon) {
       this.state.grandTrophy = true;
     }
+    // Track best tournament placement (lower rank = better)
+    if (this.state.tournamentBestPlace === null || playerRank < this.state.tournamentBestPlace) {
+      this.state.tournamentBestPlace = playerRank;
+    }
     SaveSystem.saveNow(this.state);
     this.tournamentTimer.setVisible(false);
     this.game.events.emit('updateUI', this.state);
