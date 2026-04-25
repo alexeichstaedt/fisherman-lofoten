@@ -1034,7 +1034,7 @@ window.KakernScene = class extends Phaser.Scene {
     if (this.cabinMenuOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.cabinMenuIndex=(this.cabinMenuIndex-1+window.RENTAL_CABINS.length+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.cabinMenuIndex=(this.cabinMenuIndex+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeCabinPurchase();
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeCabinPurchase();
       return;
     }
 

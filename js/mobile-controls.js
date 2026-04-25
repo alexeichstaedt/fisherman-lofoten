@@ -83,18 +83,18 @@
   const gameContainer = document.getElementById('game-container');
   const controlsPanel = document.getElementById('controls-panel');
 
-  // dvh (dynamic viewport height) = viewport height at its smallest (all browser
-  // chrome visible). This means content never bleeds behind Safari's toolbars.
-  // No JS math needed — the CSS unit handles iOS Safari correctly natively.
+  // Inject a style that pushes the entire body up past Safari's bottom toolbar.
+  // env(safe-area-inset-bottom) covers the home indicator (~34px) but NOT the
+  // Safari nav bar (~50px). Adding 54px covers both on all iPhone models.
   const _safeStyle = document.createElement('style');
-  _safeStyle.textContent = [
-    'body { height: 100dvh !important; padding-bottom: 0 !important; }',
-    '#game-container { height: 42dvh !important; flex: 0 0 42dvh !important; }',
-    '#controls-panel { display: block !important; height: calc(58dvh - 2px) !important; }'
-  ].join(' ');
+  _safeStyle.textContent = 'body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 54px) !important; }';
   document.head.appendChild(_safeStyle);
 
-  controlsPanel.style.display = 'block';
+  // Top 42% for game, remaining for controls
+  gameContainer.style.height  = '42vh';
+  gameContainer.style.flex    = '0 0 42vh';
+  controlsPanel.style.display        = 'block';
+  controlsPanel.style.height         = 'calc(58vh - 2px)';
 
   // ── Button factory ────────────────────────────────────────────────────────
   function btn(label, bg, extra = '') {
@@ -174,7 +174,7 @@
   // G is a no-op when no animal follows, so combining is safe.
   const btnStart = rectBtn('START', 'rgba(255,255,255,0.18)', `
     width:20vw; height:8vw; font-size:11px;
-    left:50%; bottom:calc(30% + 8vw); transform:translateX(-50%);`);
+    left:50%; bottom:calc(30% + 14vw); transform:translateX(-50%);`);
   btnStart.addEventListener('pointerdown', e => {
     e.preventDefault();
     fireDown('start'); setTimeout(() => fireUp('start'), 80);
@@ -185,13 +185,13 @@
   // ── Radio buttons (T = station, R = next song) ────────────────────────────
   const btnStation = rectBtn('📻 STN', 'rgba(251,191,36,0.50)', `
     width:22vw; height:8vw; font-size:10px;
-    right:4vw; bottom:calc(30% + 8vw);`);
+    right:4vw; bottom:calc(30% + 14vw);`);
   bindTap(btnStation, 'radio');
   controlsPanel.appendChild(btnStation);
 
   const btnSong = rectBtn('⏭ SONG', 'rgba(147,197,253,0.45)', `
     width:22vw; height:8vw; font-size:10px;
-    left:4vw; bottom:calc(30% + 8vw);`);
+    left:4vw; bottom:calc(30% + 14vw);`);
   bindTap(btnSong, 'skip');
   controlsPanel.appendChild(btnSong);
 
