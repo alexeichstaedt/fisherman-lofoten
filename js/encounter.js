@@ -689,7 +689,11 @@ window.AnimalFollowMixin = {
   initAnimalFollow() {
     this.followingAnimal = null;
     this._animalGKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
-    this._escKeyAnimal = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
+    // Event-based ESC flag (same pattern as BaddieFollowMixin) so B button on
+    // mobile (ESC key) is never silently consumed by scene menu handlers.
+    this._animalEscFlag = false;
+    this._animalEscFn = () => { this._animalEscFlag = true; };
+    this.input.keyboard.on('keydown-ESC', this._animalEscFn, this);
     const id = this.state.followAnimalId;
     if (id == null) return;
     const animalDef = window.ANIMALS.find(a => a.id === id);
@@ -705,10 +709,11 @@ window.AnimalFollowMixin = {
   },
 
   checkAnimalFollowInput() {
-    if (!this._animalGKey) return;
-    const gJust = Phaser.Input.Keyboard.JustDown(this._animalGKey);
-    const escJust = this._escKeyAnimal && Phaser.Input.Keyboard.JustDown(this._escKeyAnimal);
-    if ((!gJust && !escJust) || !this.followingAnimal) return;
+    if (!this.followingAnimal) return;
+    const gJust   = this._animalGKey && Phaser.Input.Keyboard.JustDown(this._animalGKey);
+    const escJust = this._animalEscFlag;
+    if (escJust) this._animalEscFlag = false; // consume
+    if (!gJust && !escJust) return;
     const hasMenu = !!(this.shopOpen || this.travelMenuOpen || this.dialogOpen || this.museumOpen ||
                        this.recordShopOpen || this.duffelMenuOpen || this.dragShopOpen || this.marketOpen);
     if (escJust && hasMenu) return;
@@ -822,7 +827,8 @@ window.BaddieFollowMixin = {
   },
 
   checkBaddieFollowInput() {
-    if (!this._gKeyBaddie || !this.followingBaddie) return;
+    if (!this._gKeyBaddie) return;
+    if (!this.followingBaddie && !this.state.companion) return;
     const gJust   = Phaser.Input.Keyboard.JustDown(this._gKeyBaddie);
     const escJust = this._bddEscFlag;
     if (escJust) this._bddEscFlag = false; // consume
@@ -831,11 +837,23 @@ window.BaddieFollowMixin = {
     const hasMenu = !!(this.shopOpen || this.travelMenuOpen || this.dialogOpen || this.museumOpen ||
                        this.recordShopOpen || this.duffelMenuOpen || this.dragShopOpen || this.marketOpen);
     if (escJust && hasMenu) return;
-    this.followingBaddie.sprite.destroy();
-    this.followingBaddie = null;
-    this.state.followingBaddieName = null;
-    SaveSystem.save(this.state);
-    this.showMsg('💅 She went home.');
+
+    if (this.followingBaddie) {
+      // Dismiss baddie
+      this.followingBaddie.sprite.destroy();
+      this.followingBaddie = null;
+      this.state.followingBaddieName = null;
+      SaveSystem.save(this.state);
+      this.showMsg('💅 She went home.');
+    } else if (this.state.companion) {
+      // Dismiss guide companion
+      const guide = (window.GUIDES || []).find(g => g.key === this.state.companion);
+      const guideName = guide ? guide.name : 'Guide';
+      this.state.companion = null;
+      if (this.companionSprite) { this.companionSprite.destroy(); this.companionSprite = null; }
+      SaveSystem.save(this.state);
+      this.showMsg('🧭 ' + guideName + ' went home.');
+    }
   },
 
   updateBaddieFollow(lastTile) {

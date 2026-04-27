@@ -6,7 +6,7 @@
 window.DragCatchMixin = {
   checkDragCatch(location) {
     if (!this.onWater || !this.state.hasBoat) return;
-    if (Math.random() >= 0.02) return; // 5% chance per water tile
+    if (Math.random() >= 0.01) return; // 1% chance per water tile moved
 
     const fish = window.getDragFish(location);
     if (!fish) return;

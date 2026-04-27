@@ -153,7 +153,8 @@
     avatarWrap.appendChild(avatarImg);
 
     const hName = document.createElement('div');
-    hName.textContent = name;
+    const passportFlags = (state.hasNorPassport ? '🇳🇴' : '') + (state.hasUsaPassport ? (state.hasNorPassport ? ' 🇺🇸' : '🇺🇸') : '');
+    hName.textContent = name + passportFlags;
     hName.style.cssText = `color:#e2e8f0; font-size:14px; font-weight:bold; margin-top:8px; letter-spacing:0.5px;`;
 
     const hLevel = document.createElement('div');

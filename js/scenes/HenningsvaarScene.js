@@ -597,7 +597,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     const selCount = this.swapShopSelected.length;
     const statusColor = selCount === 2 ? '#4ade80' : '#94a3b8';
     const statusMsg = selCount === 2
-      ? `✓ ${selCount}/2 selected — press ENTER to swap!`
+      ? `✓ ${selCount}/2 selected — press A / ENTER to swap!`
       : `${selCount}/2 items selected`;
     const statusTxt = this.add.text(cx, cy + H/2 - 42, statusMsg, {
       fontSize: '12px', color: statusColor, fontFamily: 'monospace'
@@ -605,7 +605,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     if (selCount === 2) {
       statusTxt.setInteractive({useHandCursor:true}).on('pointerdown', ()=>{ if(this.swapShopOpen) this._executeSwap(); });
     }
-    const hint = this.add.text(cx, cy + H/2 - 20, '↑↓ Navigate   SPACE select/deselect   ENTER swap   ESC cancel', {
+    const hint = this.add.text(cx, cy + H/2 - 20, '↑↓ Navigate   A/SPACE select · trade when 2 selected   ENTER trade   ESC cancel', {
       fontSize: '10px', color: '#475569', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(58).setScrollFactor(0);
     this.swapShopObjects.push(statusTxt, hint);
@@ -698,15 +698,21 @@ window.HenningsvaarScene = class extends Phaser.Scene {
         this._renderSwapShop();
       }
       if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-        const idx = this.swapShopCursor;
-        if (this.swapShopSelected.includes(idx)) {
-          this.swapShopSelected = this.swapShopSelected.filter(i => i !== idx);
-        } else if (this.swapShopSelected.length < 2) {
-          this.swapShopSelected.push(idx);
+        if (this.swapShopSelected.length === 2) {
+          // 2 items already selected — A button initiates the trade
+          this._executeSwap();
+        } else {
+          // Toggle selection on current item
+          const idx = this.swapShopCursor;
+          if (this.swapShopSelected.includes(idx)) {
+            this.swapShopSelected = this.swapShopSelected.filter(i => i !== idx);
+          } else {
+            this.swapShopSelected.push(idx);
+          }
+          this._renderSwapShop();
         }
-        this._renderSwapShop();
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
         this._executeSwap();
       }
       return;

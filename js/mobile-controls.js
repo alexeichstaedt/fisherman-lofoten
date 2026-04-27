@@ -3,11 +3,51 @@
  * Portrait:  game canvas top ~42%, control panel below.
  * Landscape: game canvas center square, d-pad+CARD on left, action buttons on right.
  * Buttons dispatch real DOM KeyboardEvents so Phaser handles them natively.
+ *
+ * FEATURE FLAG — set to true to re-enable landscape mode once it is stable.
  */
+const LANDSCAPE_ENABLED = false;
+
 (function () {
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
                 || navigator.maxTouchPoints > 0;
   if (!isMobile) return;
+
+  // ── Rotate-to-portrait overlay ─────────────────────────────────────────────
+  let _rotateOverlay = null;
+  function _ensureRotateOverlay() {
+    if (_rotateOverlay) return;
+    _rotateOverlay = document.createElement('div');
+    _rotateOverlay.style.cssText = `
+      position: fixed; inset: 0; z-index: 99999;
+      background: #060f1e; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-family: monospace; color: #e2e8f0; text-align: center;
+      touch-action: none; user-select: none;`;
+    _rotateOverlay.innerHTML = `
+      <div style="font-size:64px;margin-bottom:16px;">📱</div>
+      <div style="font-size:20px;font-weight:bold;margin-bottom:8px;">Rotate your phone</div>
+      <div style="font-size:14px;color:#94a3b8;">Please switch back to portrait mode<br>to play Fisherman: Lofoten</div>`;
+    document.body.appendChild(_rotateOverlay);
+  }
+
+  function _updateRotateOverlay() {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    if (isLandscape) {
+      _ensureRotateOverlay();
+      _rotateOverlay.style.display = 'flex';
+    } else if (_rotateOverlay) {
+      _rotateOverlay.style.display = 'none';
+    }
+  }
+
+  if (!LANDSCAPE_ENABLED) {
+    _updateRotateOverlay();
+    window.addEventListener('resize', _updateRotateOverlay);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _updateRotateOverlay);
+    }
+  }
 
   // ── Key mappings ──────────────────────────────────────────────────────────
   const KEYS = {
@@ -553,7 +593,7 @@
       const vvp = window.visualViewport;
       const w = vvp ? Math.round(vvp.width)  : window.innerWidth;
       const h = vvp ? Math.round(vvp.height) : window.innerHeight;
-      if (w > h) {
+      if (w > h && LANDSCAPE_ENABLED) {
         _applyLandscape(w, h);
       } else {
         _applyPortrait(h);
