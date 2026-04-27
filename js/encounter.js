@@ -26,8 +26,8 @@ window.BushEncounterMixin = {
       if (r < 0.50) this._triggerHaterEncounter();
       else this._triggerBaddieEncounter();
     } else {
-      if (r < 0.40) this._triggerHaterEncounter();
-      else if (r < 0.80) this._triggerBaddieEncounter();
+      if (r < 0.33) this._triggerHaterEncounter();
+      else if (r < 0.66) this._triggerBaddieEncounter();
       else this._triggerItemEncounter();
     }
   },
@@ -248,6 +248,17 @@ window.BushEncounterMixin = {
       resultMsg = `You ran away from the hater. -3 AURA`;
     } else if (d.type === 'baddie') {
       if (idx === 0) {
+        // Initiative check — high-level baddies may walk away before you can rizz
+        const seeChance = Math.min(100, Math.max(0, (100 - 10 * (d.level - 1)) + (this.state.level || 1)));
+        if (Math.random() * 100 >= seeChance) {
+          // She walked away
+          if (typeof this.state.aura === 'undefined') this.state.aura = 20;
+          this.state.aura = Math.max(-100, this.state.aura - 2);
+          SaveSystem.save(this.state);
+          this.game.events.emit('updateUI', this.state);
+          this._showEncounterResult('She walked away... 💔 -2 AURA', -2);
+          return;
+        }
         // Show quiz instead of dice roll — pick a random question
         const qs = window.BADDIE_QUESTIONS || [];
         const q  = qs[Math.floor(Math.random() * qs.length)];

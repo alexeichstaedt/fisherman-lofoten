@@ -754,7 +754,7 @@ window.ReineScene = class extends Phaser.Scene {
         fontSize:'20px', color:'#38bdf8', fontFamily:'monospace'
       }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
       const desc = this.add.text(cx, contentY + 118,
-        'Auto-catch any fish over 50kg.\nSingle use — one per player.',
+        'Auto-catch any fish over 50kg.\nSingle use — carry one at a time.',
         { fontSize:'12px', color:'#94a3b8', fontFamily:'monospace', align:'center' }
       ).setOrigin(0.5).setDepth(61).setScrollFactor(0);
       this._marketObjects.push(icon, name, desc);

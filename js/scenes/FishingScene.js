@@ -148,6 +148,12 @@ window.FishingScene = class FishingScene extends Phaser.Scene {
       this.currentFish.weight = Math.min(99, this.currentFish.weight + (rodData.weightBonus || 0));
     }
 
+    // Aura bonus: 100 aura = +5 kg
+    if ((this.fishingData.state && (this.fishingData.state.aura || 0) >= 100) &&
+        !this.currentFish.isKillerWhale && this.currentFish.maxW <= 99) {
+      this.currentFish.weight = Math.min(99, this.currentFish.weight + 5);
+    }
+
     // ── Harpoon prompt: offer auto-catch for fish > 50kg ──
     if (this.currentFish.weight > 50 && this.fishingData.state && this.fishingData.state.hasHarpoon) {
       this.phase = 'harpoon';

@@ -370,6 +370,10 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       }
       this.state.money -= j.price;
       this.state.ownedJackets.push(j.key);
+      const allJacketKeys = ['im-yellow-jacket', 'im-pink-bape', 'im-norway-jacket'];
+      if (allJacketKeys.every(k => this.state.ownedJackets.includes(k))) {
+        window.checkAndAwardBadge(this.state, 'all-jackets', 'All Jackets');
+      }
       this.state.aura = Math.max(-100, Math.min(100, (this.state.aura || 20) + 10));
     }
     this.state.characterKey = j.key;

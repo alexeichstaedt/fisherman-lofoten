@@ -532,6 +532,9 @@ window.LeknesScene = class extends Phaser.Scene {
     this.state.money -= price;
     const picked = available[Math.floor(Math.random()*available.length)];
     this.state.animals.push(picked.id);
+    if ((this.state.animals || []).length >= (window.ANIMALS || []).length) {
+      window.checkAndAwardBadge(this.state, 'all-animals', 'All Animals');
+    }
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI', this.state);
     this.updateAnimalShop();
@@ -868,6 +871,7 @@ window.LeknesScene = class extends Phaser.Scene {
     this.state.rod = rod.key;
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI',this.state);
+    if (this.state.rod === 'bape') window.checkAndAwardBadge(this.state, 'bape-rod', 'Bape Rod');
     this.showMsg('Bought '+rod.name+'!');
     this.updateRodShop();
   }

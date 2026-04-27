@@ -6,10 +6,10 @@ window.GAME_DATA = {
   MAP_ROWS: 32,
   RODS: {
     basic:   { name: 'Basic Rod',   price: 0,     timeLimit: 30, weightBonus: 0,  autoCatch: false },
-    silver:  { name: 'Silver Rod',  price: 5000,  timeLimit: 30, weightBonus: 5,  autoCatch: false },
-    gold:    { name: 'Gold Rod',    price: 7500,  timeLimit: 30, weightBonus: 10, autoCatch: false },
-    diamond: { name: 'Diamond Rod', price: 15000, timeLimit: 30, weightBonus: 15, autoCatch: false },
-    bape:    { name: 'Bape Rod',    price: 30000, timeLimit: 30, weightBonus: 25, autoCatch: false },
+    silver:  { name: 'Silver Rod',  price: 6000,  timeLimit: 30, weightBonus: 5,  autoCatch: false },
+    gold:    { name: 'Gold Rod',    price: 12000, timeLimit: 30, weightBonus: 10, autoCatch: false },
+    diamond: { name: 'Diamond Rod', price: 20000, timeLimit: 30, weightBonus: 15, autoCatch: false },
+    bape:    { name: 'Bape Rod',    price: 35000, timeLimit: 30, weightBonus: 25, autoCatch: false },
   },
   BOAT_PRICE: 10000,
   XP_PER_LEVEL: 1000, // base — actual threshold = level * 1000
@@ -1491,6 +1491,9 @@ window.addTrophy = function(state, fishName) {
   if (!state.trophies) state.trophies = [];
   if (state.trophies.includes(fishName)) return false;
   state.trophies.push(fishName);
+  if (state.trophies.length >= GAME_DATA.TROPHY_FISH.length) {
+    window.checkAndAwardBadge(state, 'all-trophy-fish', 'All Trophy Fish');
+  }
   return true;
 };
 
@@ -1524,6 +1527,8 @@ window.addFishAuraMiss = function(state, fish, magical) {
 
 window.addFishAura = function(state, fish) {
   if (typeof state.aura === 'undefined') state.aura = 20;
+  // No aura for common fish
+  if (fish.rarity === 'common') return 0;
   const isTrophy = GAME_DATA.TROPHY_FISH.includes(fish.name);
   const isMagical = !!fish.magical;
   const gain = isTrophy ? 10 : (isMagical ? 2 : 1);

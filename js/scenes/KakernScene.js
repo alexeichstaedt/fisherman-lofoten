@@ -143,8 +143,10 @@ window.KakernScene = class extends Phaser.Scene {
 
     Object.assign(this, window.BushEncounterMixin);
     Object.assign(this, window.BaddieFollowMixin);
+    Object.assign(this, window.AnimalFollowMixin);
     this.initEncounter();
     this.initBaddieFollow();
+    this.initAnimalFollow();
     window.checkBaddieTimers(this.state);
     Object.assign(this, window.DragCatchMixin);
 
@@ -590,6 +592,9 @@ window.KakernScene = class extends Phaser.Scene {
     this.state.ownedCabins = [...owned, cab.id];
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI', this.state);
+    if ((this.state.ownedCabins || []).length >= 3) {
+      window.checkAndAwardBadge(this.state, 'three-cabins', '3 Rental Cabins');
+    }
     this.drawRentalCabinLabels();
     this.cmStatusTxt.setText('🏠 ' + cab.name + ' is now your rental cabin!');
     this.updateCabinMenuDisplay();
@@ -963,7 +968,7 @@ window.KakernScene = class extends Phaser.Scene {
             if (this.anims.exists(_wk)) _sprite.play(_wk, true);
             this.followingBaddie = { name: _top.name, tx: _bsx, ty: this.playerTileY, sprite: _sprite, spriteKey: _top.sprite||'ow2' };
             SaveSystem.save(this.state);
-            this.showMsg('💅 ' + _top.name + ' is following you! Press G to send home.');
+            this.showMsg('💅 ' + _top.name + ' is following you! Press G (desktop) or B (mobile) to send home.');
           }
         }
         this.closeDuffelMenu();
@@ -978,6 +983,7 @@ window.KakernScene = class extends Phaser.Scene {
           this.state.aura = Math.min(100, (this.state.aura || 0) + 50);
           const leveled = addXP(this.state, 100000);
           if (leveled) this.game.events.emit('levelUp', this.state.level);
+          window.checkAndAwardBadge(this.state, 'upgraded-cabin', 'Upgraded Cabin');
           SaveSystem.saveNow(this.state);
           this.game.events.emit('updateUI', this.state);
           this.closeDuffelMenu();
@@ -1014,7 +1020,7 @@ window.KakernScene = class extends Phaser.Scene {
             this.state.followAnimalId = animal.id;
             SaveSystem.save(this.state);
             this.closeAnimalReveal();
-            const hint = def.terrain === 'water' ? 'follows your boat! Press G to send home.' : 'is following you! Press G to send home.';
+            const hint = def.terrain === 'water' ? 'follows your boat! Press G (desktop) or B (mobile) to send home.' : 'is following you! Press G (desktop) or B (mobile) to send home.';
             this.showMsg((def.name||'Animal') + ' ' + hint, 3000);
           }
         } else {
@@ -1052,28 +1058,8 @@ window.KakernScene = class extends Phaser.Scene {
     }
     const canFish=this._canFish, nearNPC=this._nearNPC, nearAnimal=this._nearAnimal, nearDoor=this._nearDoor;
 
-    // G key: send following animal or baddie home
-    if (Phaser.Input.Keyboard.JustDown(this.gKey)) {
-      if (this.followingBaddie) {
-        this.followingBaddie.sprite.destroy();
-        this.followingBaddie = null;
-        this.state.followingBaddieName = null;
-        SaveSystem.save(this.state);
-        this.showMsg('💅 She went home.');
-      } else if (this.followingAnimal) {
-        const def = window.ANIMALS.find(a => a.id === this.followingAnimal.id) || {};
-        const fa = this.followingAnimal;
-        const TS = GAME_DATA.TILE_SIZE;
-        fa.tx = fa.homeTx;
-        fa.ty = fa.homeTy;
-        this.tweens.add({targets: fa.sprite, x: fa.homeTx*TS+TS/2, y: fa.homeTy*TS+TS/2, duration: 400,
-          onComplete: () => { fa.sprite.setVisible(true); }});
-        this.followingAnimal = null;
-        this.state.followAnimalId = null;
-        SaveSystem.save(this.state);
-        this.showMsg('🏡 ' + (def.name||'Your animal') + ' has returned home!', 2500);
-      }
-    }
+    this.checkBaddieFollowInput();
+    this.checkAnimalFollowInput();
 
     if (canFish && !this.isFishing && Phaser.Input.Keyboard.JustDown(this.fKey)) { this.startFishing(); return; }
     if (nearNPC  && Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this.interact(nearNPC); return; }

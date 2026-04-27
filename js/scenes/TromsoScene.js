@@ -400,6 +400,10 @@ window.TromsoScene = class extends Phaser.Scene {
         if (!this.state.ownedRecords) this.state.ownedRecords = [];
         const newSongs = ['Gudinne', 'Santorini Sunset'];
         newSongs.forEach(s => { if (!this.state.ownedRecords.includes(s)) this.state.ownedRecords.push(s); });
+        // Check badge: all 15 buyable + 2 unreleased = 17 total
+        if (this.state.ownedRecords.length >= (window.RECORDS_FOR_SALE || []).length + 2) {
+          window.checkAndAwardBadge(this.state, 'all-records', 'All Records');
+        }
         SaveSystem.save(this.state);
         this.game.events.emit('updateUI', this.state);
         this.openDialog('🎵 Secret Cabin', 'The hidden key unlocks this cabin! Inside you find 2 unreleased Ikke Musikk tracks: "Gudinne" and "Santorini Sunset" — added to your Records!');
@@ -916,6 +920,9 @@ window.TromsoScene = class extends Phaser.Scene {
         this.state.aura = Math.max(-100, aura - window.RECORD_PRICE_AURA);
         if (!this.state.ownedRecords) this.state.ownedRecords = [];
         this.state.ownedRecords.push(rec);
+        if ((this.state.ownedRecords || []).length >= (window.RECORDS_FOR_SALE || []).length + 2) {
+          window.checkAndAwardBadge(this.state, 'all-records', 'All Records');
+        }
         const leveled = addXP(this.state, 1000);
         if (leveled) this.game.events.emit('levelUp', this.state.level);
         SaveSystem.saveNow(this.state);

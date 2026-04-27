@@ -2,12 +2,23 @@
 // Opens a screenshot-friendly stats card. Triggered by the CARD button on mobile.
 (function () {
 
-  // Badge ID → display label
-  const BADGE_LABELS = {
-    'baddie-collector': '😈 10 Baddies',
-    'hater-boss':       '⚔️ 10 Haters',
-    'fisher-100':       '🐟 100 Fish',
-    'fisher-1000':      '🎣 1000 Fish',
+  // Badge ID → display emoji
+  const BADGE_EMOJIS = {
+    'upgraded-cabin':  '🏠',
+    'all-trophy-fish': '🏆',
+    'fisher-1000':     '🐟',
+    'fish-1000':       '🐟',
+    'bape-rod':        '🎣',
+    'all-records':     '🎵',
+    'all-jackets':     '🧥',
+    'three-cabins':    '🏡',
+    'all-animals':     '🦁',
+    // legacy badges
+    'baddie-collector': '😈',
+    'hater-boss':       '⚔️',
+    'fisher-100':       '🐟',
+    'fish-100':         '🐟',
+    'hater-slayer':     '⚔️',
   };
 
   function ordinal(n) {
@@ -29,6 +40,8 @@
     const charKey  = state.characterKey || 'ikke-musikk';
     const name     = state.playerName   || 'Ikke Musikk';
     const level    = state.level        || 1;
+    const patk = window.getPlayerATK ? window.getPlayerATK(state) : 1;
+    const pdef = window.getPlayerDEF ? window.getPlayerDEF(state) : 1;
     const money    = state.money        || 0;
     const aura     = state.aura         || 0;
     const fishTotal= state.totalFishCaught || 0;
@@ -40,17 +53,17 @@
 
     const sortedBaddies = [...(state.baddiesCaught || [])].sort((a, b) => b.level - a.level);
     const bestBaddie    = sortedBaddies[0];
-    const baddieLabel   = bestBaddie ? `${bestBaddie.name} (Lv ${bestBaddie.level})` : '—';
+    const BADDIE_FLAGS_MAP = (window.BADDIE_FLAGS) || {};
+    const baddieFlag = BADDIE_FLAGS_MAP[bestBaddie && bestBaddie.name] || '';
+    const baddieLabel = bestBaddie ? `${baddieFlag} ${bestBaddie.name} (Lv ${bestBaddie.level})`.trim() : '—';
 
     const sortedHaters = [...(state.hatersDefeated || [])].sort((a, b) => b.level - a.level);
     const topHater     = sortedHaters[0];
     const haterLabel   = topHater ? `Lv ${topHater.level}` : '—';
 
-    const tournamentLabel = state.grandTrophy
-      ? '🏆 Champion'
-      : (state.tournamentBestPlace ? ordinal(state.tournamentBestPlace) : '—');
+    const tournamentLabel = state.grandTrophy ? 'Yes 🏆' : 'No';
 
-    const badges = (state.badges || []).map(id => BADGE_LABELS[id] || id);
+    const badges = (state.badges || []).map(id => BADGE_EMOJIS[id] || '🏅');
 
     // ── Build overlay ─────────────────────────────────────────────────────
     const overlay = document.createElement('div');
@@ -116,7 +129,7 @@
     hName.style.cssText = `color:#e2e8f0; font-size:14px; font-weight:bold; margin-top:8px; letter-spacing:0.5px;`;
 
     const hLevel = document.createElement('div');
-    hLevel.textContent = `⭐ Level ${level}`;
+    hLevel.textContent = `⭐ Level ${level}  (ATK: ${patk}, DEF: ${pdef})`;
     hLevel.style.cssText = `color:#f59e0b; font-size:12px; margin-top:2px;`;
 
     header.appendChild(avatarWrap);
@@ -157,7 +170,7 @@
     body.appendChild(statRow('🎣', 'Biggest Catch',  bigFishLabel,      '#e2e8f0'));
     body.appendChild(statRow('😈', 'Best Baddie',    baddieLabel,       '#f472b6'));
     body.appendChild(statRow('⚔️', 'Top Hater',      haterLabel,        '#fb923c'));
-    body.appendChild(statRow('🏆', 'Tournament',     tournamentLabel,   '#f59e0b'));
+    body.appendChild(statRow('🏆', 'Tournament Champion', tournamentLabel,   '#f59e0b'));
 
     // ── Badges row ───────────────────────────────────────────────────────
     const badgeSection = document.createElement('div');
@@ -167,7 +180,7 @@
     badgeTitle.style.cssText = `color:#64748b; font-size:11px; margin-bottom:3px;`;
     const badgeList = document.createElement('div');
     badgeList.style.cssText = `color:#e2e8f0; font-size:11px; line-height:1.6;`;
-    badgeList.textContent = badges.length ? badges.join('  ') : '—';
+    badgeList.textContent = badges.length ? badges.join(' ') : '—';
     badgeSection.appendChild(badgeTitle);
     badgeSection.appendChild(badgeList);
     body.appendChild(badgeSection);

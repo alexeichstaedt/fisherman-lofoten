@@ -220,19 +220,18 @@ window.SnowballFightScene = class SnowballFightScene extends Phaser.Scene {
     }
 
     // ── NPC AI ───────────────────────────────────────────────────────────────
-    // NPC throw interval ramps from 1000ms → 500ms as game progresses
-    const npcThrowInterval = this.elapsed < 15000 ? 1000
-                           : this.elapsed < 30000 ? 800
-                           : this.elapsed < 45000 ? 650
-                           : 500;
+    // NPC throw interval ramps from 800ms → 400ms as game progresses
+    const npcThrowInterval = this.elapsed < 30000 ? 800
+                           : this.elapsed < 45000 ? 600
+                           : 400;
     // NPC movement speed ramps too
-    const npcMoveSpeed = this.elapsed < 20000 ? 120
-                       : this.elapsed < 40000 ? 165
-                       : 220;
+    const npcMoveSpeed = this.elapsed < 30000 ? 175
+                       : this.elapsed < 45000 ? 200
+                       : 225;
 
     // Drift toward move target (change target more frequently as game goes on)
     this.npcMoveTimer += delta;
-    const npcRetargetInterval = this.elapsed < 20000 ? 1200 : this.elapsed < 40000 ? 900 : 650;
+    const npcRetargetInterval = this.elapsed < 30000 ? 1200 : this.elapsed < 45000 ? 900 : 650;
     if (this.npcMoveTimer >= npcRetargetInterval) {
       this.npcMoveTimer = 0;
       this.npcMoveTarget = {
@@ -390,12 +389,11 @@ window.SnowballFightScene = class SnowballFightScene extends Phaser.Scene {
         fontSize: '16px', color: '#4ade80', fontFamily: 'monospace', stroke: '#000', strokeThickness: 2
       }).setOrigin(0.5).setDepth(51);
     }
-    this.add.text(W/2, H/2 + 80, 'Press SPACE or ESC to leave', {
+    this.add.text(W/2, H/2 + 80, 'Press ESC or B to leave', {
       fontSize: '13px', color: '#64748b', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(51);
 
-    this.input.keyboard.once('keydown-SPACE', () => this._exit());
-    this.input.keyboard.once('keydown-ESC',   () => this._exit());
+    this.input.keyboard.once('keydown-ESC', () => this._exit());
   }
 
   _exit() {
