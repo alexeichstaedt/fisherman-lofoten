@@ -386,6 +386,10 @@ window.BushEncounterMixin = {
       const _bHours = 1 + Math.floor(Math.random() * 24);
       this.state.baddiesCaught.unshift({ name: _bName, level: d.level, sprite: d.spriteKey, expiresAt: Date.now() + _bHours * 3600000 });
       this.state.baddiesCaught = this.state.baddiesCaught.slice(0, 10);
+      // Update all-time best baddie (persists even after she expires/leaves)
+      if (!this.state.allTimeBestBaddie || d.level > this.state.allTimeBestBaddie.level) {
+        this.state.allTimeBestBaddie = { name: _bName, level: d.level, sprite: d.spriteKey };
+      }
       if (this.state.baddiesCaught.length >= 10 && window.checkAndAwardBadge(this.state, 'baddie-collector', '10 Baddies')) {
         resultMsg += '\n🏆 BADGE: Baddie Collector!';
       }
@@ -803,7 +807,11 @@ window.BaddieFollowMixin = {
   initBaddieFollow() {
     this.followingBaddie = null;
     this._gKeyBaddie = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
-    this._escKeyBaddie = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESCAPE);
+    // Use an event-based flag instead of JustDown — escKey is shared with scene menu
+    // handlers which consume justDown first, causing B button to silently fail.
+    this._bddEscFlag = false;
+    this._bddEscFn = () => { this._bddEscFlag = true; };
+    this.input.keyboard.on('keydown-ESC', this._bddEscFn, this);
     const name = this.state.followingBaddieName;
     if (!name) return;
     const b = (this.state.baddiesCaught || []).find(x => x.name === name);
@@ -821,8 +829,9 @@ window.BaddieFollowMixin = {
 
   checkBaddieFollowInput() {
     if (!this._gKeyBaddie || !this.followingBaddie) return;
-    const gJust = Phaser.Input.Keyboard.JustDown(this._gKeyBaddie);
-    const escJust = this._escKeyBaddie && Phaser.Input.Keyboard.JustDown(this._escKeyBaddie);
+    const gJust   = Phaser.Input.Keyboard.JustDown(this._gKeyBaddie);
+    const escJust = this._bddEscFlag;
+    if (escJust) this._bddEscFlag = false; // consume
     if (!gJust && !escJust) return;
     // Only send home via ESC when no menus are open
     const hasMenu = !!(this.shopOpen || this.travelMenuOpen || this.dialogOpen || this.museumOpen ||

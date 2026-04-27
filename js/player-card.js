@@ -51,8 +51,7 @@
       ? `${topFish.name} · ${topFish.weight} kg`
       : '—';
 
-    const sortedBaddies = [...(state.baddiesCaught || [])].sort((a, b) => b.level - a.level);
-    const bestBaddie    = sortedBaddies[0];
+    const bestBaddie = state.allTimeBestBaddie || null;
     const BADDIE_FLAGS_MAP = (window.BADDIE_FLAGS) || {};
     const baddieFlag = BADDIE_FLAGS_MAP[bestBaddie && bestBaddie.name] || '';
     const baddieLabel = bestBaddie ? `${baddieFlag} ${bestBaddie.name} (Lv ${bestBaddie.level})`.trim() : '—';

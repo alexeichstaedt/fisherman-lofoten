@@ -486,10 +486,13 @@
     gameContainer.style.position = '';
     gameContainer.style.left     = '';
     gameContainer.style.top      = '';
-    gameContainer.style.width    = '';
+    gameContainer.style.width    = '100%';
     gameContainer.style.flex     = '';
 
-    const gameH = Math.round(h * 0.42);
+    // Game canvas must fill full screen width and maintain the game's 800×640 (5:4) aspect ratio.
+    // height = width × (640/800) — no black bars, no letterboxing.
+    const w = window.innerWidth;
+    const gameH = Math.round(w * (640 / 800));
     const ctrlH = h - gameH - 2;
     gameContainer.style.height = gameH + 'px';
     gameContainer.style.flex   = '0 0 ' + gameH + 'px';
@@ -497,9 +500,11 @@
   }
 
   function _applyLandscape(w, h) {
-    const sideW = Math.floor((w - h) / 2);
+    // Game is 800×640 (5:4). In landscape, fill max height and derive game width from ratio.
+    const gameW  = Math.round(h * (800 / 640));
+    const sideW  = Math.floor((w - gameW) / 2);
 
-    // If the side panels are too narrow (very square screen), fall back to portrait
+    // If side panels are too narrow (nearly-square screen), fall back to portrait
     if (sideW < 80) {
       _applyPortrait(h);
       return;
@@ -508,11 +513,11 @@
     // Hide portrait panel (fully inert)
     controlsPanel.style.display = 'none';
 
-    // Game container: fixed square centered between side panels
+    // Game container: fixed, correct aspect ratio, centered
     gameContainer.style.position = 'fixed';
     gameContainer.style.left     = sideW + 'px';
     gameContainer.style.top      = '0';
-    gameContainer.style.width    = h + 'px';
+    gameContainer.style.width    = gameW + 'px';
     gameContainer.style.height   = h + 'px';
     gameContainer.style.flex     = 'none';
 
