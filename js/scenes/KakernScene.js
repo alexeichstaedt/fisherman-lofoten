@@ -493,7 +493,6 @@ window.KakernScene = class extends Phaser.Scene {
     const _xpFinal = Math.round(result.xp * _xpMult);
     const leveled = addXP(this.state, _xpFinal);
     this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
-    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
     if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Kåkern');
     if (leveled) this.game.events.emit('levelUp', this.state.level);

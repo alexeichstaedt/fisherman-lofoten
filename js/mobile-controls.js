@@ -414,8 +414,8 @@
     });
 
     // ── Left panel: CARD button ─────────────────────────────────────────────
-    const cardW = Math.floor((sideW - notchGuard * 2) * 0.75);
     const cardH = Math.floor(h * 0.07);
+    const cardW = Math.floor(Math.min(cardH * 3.5, sideW * 0.55));
     lBtnCard.style.width    = cardW + 'px';
     lBtnCard.style.height   = cardH + 'px';
     lBtnCard.style.fontSize = Math.floor(cardH * 0.42) + 'px';
@@ -428,8 +428,8 @@
     const aSize  = Math.floor(Math.min(sideW * 0.55, h * 0.22));
     const bSize  = Math.floor(aSize * 0.70);
     const smSize = Math.floor(aSize * 0.70);
-    const rcW    = Math.floor((sideW - notchR * 2) * 0.85);
     const rcH    = Math.floor(h * 0.07);
+    const rcW    = Math.floor(Math.min(rcH * 3.5, sideW * 0.60));
     const aRight = notchR + Math.floor(sideW * 0.06);
 
     // Fish: top center
@@ -548,8 +548,11 @@
     _rafPending = true;
     requestAnimationFrame(() => {
       _rafPending = false;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      // Use visualViewport when available — more accurate on mobile (excludes
+      // browser chrome / OSK). Falls back to window.inner* for desktop.
+      const vvp = window.visualViewport;
+      const w = vvp ? Math.round(vvp.width)  : window.innerWidth;
+      const h = vvp ? Math.round(vvp.height) : window.innerHeight;
       if (w > h) {
         _applyLandscape(w, h);
       } else {

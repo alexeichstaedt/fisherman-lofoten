@@ -6,19 +6,12 @@
   const BADGE_EMOJIS = {
     'upgraded-cabin':  '🏠',
     'all-trophy-fish': '🏆',
-    'fisher-1000':     '🐟',
     'fish-1000':       '🐟',
     'bape-rod':        '🎣',
     'all-records':     '🎵',
     'all-jackets':     '🧥',
     'three-cabins':    '🏡',
     'all-animals':     '🦁',
-    // legacy badges
-    'baddie-collector': '😈',
-    'hater-boss':       '⚔️',
-    'fisher-100':       '🐟',
-    'fish-100':         '🐟',
-    'hater-slayer':     '⚔️',
   };
 
   function ordinal(n) {
@@ -30,6 +23,42 @@
 
   function fmtMoney(n) {
     return (n || 0).toLocaleString('no-NO') + ' NOK';
+  }
+
+  // Dynamically compute all earned badges from live state data.
+  // This handles legacy saves where checkAndAwardBadge was never called,
+  // and ensures the card always reflects what the player has actually achieved.
+  function computeEarnedBadges(state) {
+    const earned = new Set(state.badges || []);
+
+    const fish = state.totalFishCaught || 0;
+    if (fish >= 1000) earned.add('fish-1000');
+
+    const trophyTarget = window.GAME_DATA && window.GAME_DATA.TROPHY_FISH
+      ? window.GAME_DATA.TROPHY_FISH.length : 5;
+    if ((state.trophies || []).length >= trophyTarget) earned.add('all-trophy-fish');
+
+    // 4 jackets total (1 default + 3 purchasable)
+    if ((state.ownedJackets || []).length >= 4) earned.add('all-jackets');
+
+    if ((state.ownedCabins || []).length >= 3) earned.add('three-cabins');
+    if (state.hasBadderCabin) earned.add('upgraded-cabin');
+    if (state.rod === 'bape') earned.add('bape-rod');
+
+    const animalTarget = window.ANIMALS ? window.ANIMALS.length : 0;
+    if (animalTarget > 0 && (state.animals || []).length >= animalTarget) earned.add('all-animals');
+
+    const recordTarget = (window.RECORDS_FOR_SALE ? window.RECORDS_FOR_SALE.length : 15) + 2;
+    if ((state.ownedRecords || []).length >= recordTarget) earned.add('all-records');
+
+    // Persist any newly detected badges back to state
+    const newBadges = [...earned].filter(id => !(state.badges || []).includes(id));
+    if (newBadges.length > 0) {
+      state.badges = [...(state.badges || []), ...newBadges];
+      if (window.SaveSystem) window.SaveSystem.save(state);
+    }
+
+    return [...earned];
   }
 
   window.showPlayerCard = function () {
@@ -62,7 +91,7 @@
 
     const tournamentLabel = state.grandTrophy ? 'Yes 🏆' : 'No';
 
-    const badges = (state.badges || []).map(id => BADGE_EMOJIS[id] || '🏅');
+    const badges = computeEarnedBadges(state).map(id => BADGE_EMOJIS[id] || '🏅');
 
     // ── Build overlay ─────────────────────────────────────────────────────
     const overlay = document.createElement('div');

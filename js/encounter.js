@@ -390,9 +390,6 @@ window.BushEncounterMixin = {
       if (!this.state.allTimeBestBaddie || d.level > this.state.allTimeBestBaddie.level) {
         this.state.allTimeBestBaddie = { name: _bName, level: d.level, sprite: d.spriteKey };
       }
-      if (this.state.baddiesCaught.length >= 10 && window.checkAndAwardBadge(this.state, 'baddie-collector', '10 Baddies')) {
-        resultMsg += '\n🏆 BADGE: Baddie Collector!';
-      }
     } else {
       auraChange = -d.level;
       resultMsg  = `Wrong answer! She left... 😔 -${d.level} AURA`;
@@ -620,9 +617,6 @@ window.BushEncounterMixin = {
       if (!this.state.hatersDefeated) this.state.hatersDefeated = [];
       this.state.hatersDefeated.unshift({ name: `Hater Lv${d.level}`, level: d.level, sprite: d.spriteKey });
       this.state.hatersDefeated = this.state.hatersDefeated.slice(0, 10);
-      if (this.state.hatersDefeated.length >= 10 && window.checkAndAwardBadge(this.state, 'hater-slayer', '10 Haters')) {
-        resultMsg += '\n🏆 BADGE: Hater Slayer!';
-      }
     } else {
       auraChange = -d.level;
       resultMsg = `${strikeDetail}\nThe hater beat you! 💀 -${d.level} AURA`;

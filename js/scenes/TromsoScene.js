@@ -254,7 +254,6 @@ window.TromsoScene = class extends Phaser.Scene {
     xp = Math.round(xp * getXPBonus(this.state.companion, 'tromso'));
     const leveled = addXP(this.state, xp);
     this.state.totalFishCaught = (this.state.totalFishCaught || 0) + 1;
-    if (this.state.totalFishCaught === 100 && window.checkAndAwardBadge(this.state, 'fish-100', '100 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 100 Fish Caught!');
     if (this.state.totalFishCaught === 1000 && window.checkAndAwardBadge(this.state, 'fish-1000', '1000 Fish')) this.showMsg('🏆 BADGE UNLOCKED: 1000 Fish Caught!');
     window.updateTop10(this.state, result.fish, 'Tromsø');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
