@@ -174,7 +174,10 @@ window.TournamentScene = class extends Phaser.Scene {
     const leveled = addXP(this.state, result.xp);
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
-    if (newTrophy) this.game.events.emit('trophy', result.fish.name);
+    if (newTrophy) {
+      this.game.events.emit('trophy', result.fish.name);
+      if (newTrophy.badgeUnlocked) this.showMsg('🏆 BADGE UNLOCKED: All Trophy Fish! 🏆');
+    }
     if (!this.bestFish || result.fish.weight > this.bestFish.weight) {
       this.bestFish = result.fish;
       this.bestLabel.setText('Best catch: ' + result.fish.weight + 'kg ' + result.fish.name);

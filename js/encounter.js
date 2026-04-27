@@ -15,7 +15,7 @@ window.BushEncounterMixin = {
     if (!['GBu', 'BBu', 'SBu'].includes(tileKey)) return;
     // Never trigger on water tiles (e.g. snow lake in Tromsø has SBu ground under it)
     if (this.waterGrid?.[this.playerTileY]?.[this.playerTileX]) return;
-    if (Math.random() >= 0.05) return;
+    if (Math.random() >= 0.07) return;
 
     // If player owns every unique item, item drop chance → 0; redistribute to baddies
     const playerItems = this.state.playerItems || [];

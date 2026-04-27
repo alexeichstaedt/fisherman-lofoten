@@ -263,6 +263,7 @@ window.TromsoScene = class extends Phaser.Scene {
       this.game.events.emit('trophy', result.fish.name);
       const count = (this.state.trophies || []).length;
       this.showMsg('🏆 NEW TROPHY: ' + result.fish.name + '! (' + count + '/' + GAME_DATA.TROPHY_FISH.length + ')');
+      if (newTrophy.badgeUnlocked) this.showMsg('🏆 BADGE UNLOCKED: All Trophy Fish! 🏆');
     }
     const _invResult = window.addFishToInventory(this.state, result.fish, {value: fishValue, magical});
     if (_invResult.added) {
@@ -335,15 +336,23 @@ window.TromsoScene = class extends Phaser.Scene {
   }
 
 
+  _calcFishSale(inv) {
+    const gross = inv.reduce((s,f) => s + (f.value || (f.magical ? 2 : 1) * f.weight * GAME_DATA.FISH_PRICE_PER_KG), 0);
+    const taxable = gross > 50000;
+    const tax = taxable ? Math.round(gross * 0.25) : 0;
+    return { gross, tax, payout: gross - tax };
+  }
+
   openFishBuyerDialog() {
     const inv = this.state.inventory;
     if (!inv.length) {
       this.openDialog('Fish Buyer', 'No fish to sell! Walk to the fjord edge and press F to fish.');
       return;
     }
-    const total = inv.reduce((s,f) => s + (f.value || f.weight * GAME_DATA.FISH_PRICE_PER_KG), 0);
+    const { gross, tax, payout } = this._calcFishSale(inv);
+    const taxNote = tax > 0 ? ` ⚠ NAV tax 25%: -${tax.toLocaleString()} NOK → You receive ${payout.toLocaleString()} NOK.` : '';
     this.fishBuyerConfirmOpen = true;
-    this.openDialog('Fish Buyer', `I'll buy your ${inv.length} fish for ${total.toLocaleString()} NOK! Press ENTER to sell all, SPACE to cancel.`);
+    this.openDialog('Fish Buyer', `I'll buy your ${inv.length} fish for ${gross.toLocaleString()} NOK!${taxNote} Press ENTER to sell all, ESC to cancel.`);
   }
 
   buildDialogUI() {
@@ -402,7 +411,9 @@ window.TromsoScene = class extends Phaser.Scene {
         newSongs.forEach(s => { if (!this.state.ownedRecords.includes(s)) this.state.ownedRecords.push(s); });
         // Check badge: all 15 buyable + 2 unreleased = 17 total
         if (this.state.ownedRecords.length >= (window.RECORDS_FOR_SALE || []).length + 2) {
-          window.checkAndAwardBadge(this.state, 'all-records', 'All Records');
+          if (window.checkAndAwardBadge(this.state, 'all-records', 'All Records')) {
+            this.showMsg('🏆 BADGE UNLOCKED: All Records! 🎵');
+          }
         }
         SaveSystem.save(this.state);
         this.game.events.emit('updateUI', this.state);
@@ -475,15 +486,9 @@ window.TromsoScene = class extends Phaser.Scene {
     if (this.dialogOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         if (this.fishBuyerConfirmOpen) {
+          // SPACE cancels fish sale
           this.fishBuyerConfirmOpen = false;
-          const inv = this.state.inventory;
-          const total = inv.reduce((s,f) => s + (f.value || f.weight * GAME_DATA.FISH_PRICE_PER_KG), 0);
-          this.state.money += total;
-          this.state.inventory = [];
-          SaveSystem.save(this.state);
-          this.game.events.emit('updateUI', this.state);
           this.closeAll();
-          this.showMsg('Sold all fish for ' + total.toLocaleString() + ' NOK!');
           return;
         }
         if (this.returnConfirmOpen) {
@@ -513,13 +518,14 @@ window.TromsoScene = class extends Phaser.Scene {
         if (this.fishBuyerConfirmOpen) {
           this.fishBuyerConfirmOpen = false;
           const inv = this.state.inventory;
-          const total = inv.reduce((s,f) => s + (f.value || f.weight * GAME_DATA.FISH_PRICE_PER_KG), 0);
-          this.state.money += total;
+          const { payout, tax } = this._calcFishSale(inv);
+          this.state.money += payout;
           this.state.inventory = [];
           SaveSystem.save(this.state);
           this.game.events.emit('updateUI', this.state);
           this.closeAll();
-          this.showMsg('Sold all fish for ' + total.toLocaleString() + ' NOK!');
+          const taxNote = tax > 0 ? ` (⚠ NAV tax: -${tax.toLocaleString()} NOK)` : '';
+          this.showMsg('Sold all fish for ' + payout.toLocaleString() + ' NOK!' + taxNote);
           return;
         }
         if (this.returnConfirmOpen) {
@@ -775,20 +781,22 @@ window.TromsoScene = class extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
         this._recordShopObjects.push(t);
       } else {
-        albums.forEach((album, i) => {
-          const ay = contentY + i * 100;
+        const maxAlbumDisplay = 5;
+        const albumsToShow = albums.slice(0, maxAlbumDisplay);
+        albumsToShow.forEach((album, i) => {
+          const ay = contentY + i * 80;
           const titleT = this.add.text(cx - W/2 + 20, ay, `💿 ${album.title}`, {
-            fontSize: '14px', color: '#a78bfa', fontFamily: 'monospace'
+            fontSize: '13px', color: '#a78bfa', fontFamily: 'monospace'
           }).setDepth(61).setScrollFactor(0);
           this._recordShopObjects.push(titleT);
-          album.tracks.forEach((track, j) => {
-            const tt = this.add.text(cx - W/2 + 36, ay + 16 + j * 14, `${j+1}. ${track}`, {
-              fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
+          album.tracks.slice(0, 7).forEach((track, j) => {
+            const tt = this.add.text(cx - W/2 + 36, ay + 14 + j * 10, `${j+1}. ${track}`, {
+              fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace'
             }).setDepth(61).setScrollFactor(0);
             this._recordShopObjects.push(tt);
           });
         });
-        const hint = this.add.text(cx, cy + H/2 - 22, `${albums.length}/3 albums  |  ◄► tabs  ESC close`, {
+        const hint = this.add.text(cx, cy + H/2 - 22, `${albums.length} album(s)  |  ◄► tabs  ESC close`, {
           fontSize: '10px', color: '#64748b', fontFamily: 'monospace'
         }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
         this._recordShopObjects.push(hint);
@@ -797,76 +805,76 @@ window.TromsoScene = class extends Phaser.Scene {
   }
 
   _renderMakeAlbumTab(cx, cy, W, H, contentY, lineH) {
-    const albums = this.state.myAlbums || [];
+    const owned = this.state.ownedRecords || [];
+    const tracks = this._albumSelectedTracks;
 
-    if (albums.length >= 3) {
-      const t = this.add.text(cx, contentY + 60, 'Max 3 albums reached!', {
-        fontSize: '13px', color: '#64748b', fontFamily: 'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      this._recordShopObjects.push(t);
-      return;
-    }
-
-    const titleLabel = this.add.text(cx - W/2 + 20, contentY, 'Album Title:', {
-      fontSize: '12px', color: '#94a3b8', fontFamily: 'monospace'
-    }).setDepth(61).setScrollFactor(0);
-    const titleVal = this.add.text(cx - W/2 + 110, contentY, (this._albumTitle || '') + (this._albumMakingMode === 'typing' ? '█' : ''), {
-      fontSize: '12px', color: '#fef08a', fontFamily: 'monospace'
-    }).setDepth(61).setScrollFactor(0);
-    this._recordShopObjects.push(titleLabel, titleVal);
-
-    const leftLabel = this.add.text(cx - W/2 + 20, contentY + 24, 'Records  (SPACE to add):', {
+    const leftLabel = this.add.text(cx - W/2 + 20, contentY, `Your Records (${owned.length})  — SPACE to add/remove:`, {
       fontSize: '11px', color: '#64748b', fontFamily: 'monospace'
     }).setDepth(61).setScrollFactor(0);
     this._recordShopObjects.push(leftLabel);
 
-    const owned = this.state.ownedRecords || [];
-    const maxVisibleOwned = 10;
+    const maxVisibleOwned = 11;
     const ownedScrollStart = Math.max(0, Math.min(this._albumCursor - (maxVisibleOwned - 1), owned.length - maxVisibleOwned));
     const visibleOwned = owned.slice(ownedScrollStart, ownedScrollStart + maxVisibleOwned);
     visibleOwned.forEach((rec, i) => {
       const actualIdx = ownedScrollStart + i;
-      const isSelected = !this._albumTrackFocus && actualIdx === this._albumCursor;
-      const alreadyPicked = this._albumSelectedTracks.includes(rec);
-      const color = alreadyPicked ? '#475569' : isSelected ? '#fef08a' : '#e2e8f0';
+      const isSelected = actualIdx === this._albumCursor;
+      const alreadyPicked = tracks.includes(rec);
+      const color = alreadyPicked ? '#22c55e' : isSelected ? '#fef08a' : '#e2e8f0';
       const prefix = isSelected ? '▶ ' : '  ';
-      const t = this.add.text(cx - W/2 + 20, contentY + 40 + i * 18, prefix + rec + (alreadyPicked ? ' ✓' : ''), {
+      const t = this.add.text(cx - W/2 + 20, contentY + 16 + i * 17, prefix + rec + (alreadyPicked ? ' ✓' : ''), {
         fontSize: '11px', color, fontFamily: 'monospace'
       }).setDepth(61).setScrollFactor(0);
       this._recordShopObjects.push(t);
     });
 
-    const rightLabel = this.add.text(cx + 20, contentY + 24, `Tracklist (${this._albumSelectedTracks.length}/7):`, {
-      fontSize: '11px', color: '#64748b', fontFamily: 'monospace'
+    const rightLabel = this.add.text(cx + 20, contentY, `Tracklist (${tracks.length}/7):`, {
+      fontSize: '11px', color: tracks.length === 7 ? '#4ade80' : '#64748b', fontFamily: 'monospace'
     }).setDepth(61).setScrollFactor(0);
     this._recordShopObjects.push(rightLabel);
 
-    this._albumSelectedTracks.forEach((track, i) => {
-      const isSelected = this._albumTrackFocus && i === this._albumTrackCursor;
-      const color = isSelected ? '#fef08a' : '#e2e8f0';
-      const prefix = isSelected ? '▶ ' : `${i+1}. `;
-      const t = this.add.text(cx + 20, contentY + 40 + i * 18, prefix + track, {
-        fontSize: '11px', color, fontFamily: 'monospace'
+    tracks.forEach((track, i) => {
+      const t = this.add.text(cx + 20, contentY + 16 + i * 17, `${i+1}. ${track}`, {
+        fontSize: '11px', color: '#e2e8f0', fontFamily: 'monospace'
       }).setDepth(61).setScrollFactor(0);
       this._recordShopObjects.push(t);
     });
 
-    const needsTitle = !this._albumTitle;
-    const needsTracks = this._albumSelectedTracks.length < 7;
+    const albumNum = (this.state.myAlbums || []).length + 1;
+    const previewLabel = this.add.text(cx + 20, contentY + 140, `Will save as: "Album ${albumNum}"`, {
+      fontSize: '10px', color: '#475569', fontFamily: 'monospace'
+    }).setDepth(61).setScrollFactor(0);
+    this._recordShopObjects.push(previewLabel);
+
     let hint = '';
-    if (this._albumMakingMode === 'typing') {
-      hint = 'Type album title, ENTER to confirm';
-    } else if (needsTitle) {
-      hint = 'T = type title  |  SPACE = add track  |  TAB = switch panel';
-    } else if (needsTracks) {
-      hint = `SPACE add track (${7 - this._albumSelectedTracks.length} more needed)  |  TAB switch panel`;
+    if (tracks.length < 7) {
+      hint = `SPACE add/remove  (${7 - tracks.length} more needed)  |  ◄► tabs  ESC close`;
     } else {
-      hint = 'ENTER = submit album  |  TAB switch panel  |  ↑↓ reorder in right panel';
+      hint = 'A / ENTER = submit album  |  SPACE remove last added  |  ESC close';
     }
     const hintT = this.add.text(cx, cy + H/2 - 22, hint, {
-      fontSize: '10px', color: '#64748b', fontFamily: 'monospace'
+      fontSize: '10px', color: tracks.length === 7 ? '#4ade80' : '#64748b', fontFamily: 'monospace'
     }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
     this._recordShopObjects.push(hintT);
+  }
+
+  _submitAlbum() {
+    const tracks = this._albumSelectedTracks;
+    if (tracks.length < 7) { this.showMsg(`Need ${7 - tracks.length} more tracks!`); return; }
+    if (!this.state.myAlbums) this.state.myAlbums = [];
+    const albumNum = this.state.myAlbums.length + 1;
+    this.state.myAlbums.push({ title: 'Album ' + albumNum, tracks: [...tracks] });
+    // Tune to the newly created album's station
+    this.state.radioStation = this.state.myAlbums.length; // 1-indexed: album 1 → station 1
+    this._albumSelectedTracks = [];
+    this._albumCursor = 0;
+    this._albumTrackFocus = false;
+    this._albumTrackCursor = 0;
+    SaveSystem.saveNow(this.state);
+    this.game.events.emit('updateUI', this.state);
+    this.recordShopTab = 4;
+    this._renderRecordShop();
+    this.showMsg('💿 Album ' + albumNum + ' saved — tuned to Station ' + this.state.radioStation + '!');
   }
 
   _handleRecordShopInput() {
@@ -921,7 +929,9 @@ window.TromsoScene = class extends Phaser.Scene {
         if (!this.state.ownedRecords) this.state.ownedRecords = [];
         this.state.ownedRecords.push(rec);
         if ((this.state.ownedRecords || []).length >= (window.RECORDS_FOR_SALE || []).length + 2) {
-          window.checkAndAwardBadge(this.state, 'all-records', 'All Records');
+          if (window.checkAndAwardBadge(this.state, 'all-records', 'All Records')) {
+            this.showMsg('🏆 BADGE UNLOCKED: All Records! 🎵');
+          }
         }
         const leveled = addXP(this.state, 1000);
         if (leveled) this.game.events.emit('levelUp', this.state.level);
@@ -939,100 +949,42 @@ window.TromsoScene = class extends Phaser.Scene {
       if (just(this.cursors.down)) { this._albumCursor = Math.min(owned.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
 
     } else if (this.recordShopTab === 3) {
-      const albums = this.state.myAlbums || [];
-      if (albums.length >= 3) return;
+      const owned = this.state.ownedRecords || [];
+      const tracks = this._albumSelectedTracks;
 
-      const tKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
-      if (!this._albumMakingMode && Phaser.Input.Keyboard.JustDown(tKey)) {
-        this._startAlbumTitleInput();
+      if (just(this.cursors.up))   { this._albumCursor = Math.max(0, this._albumCursor - 1); this._renderRecordShop(); return; }
+      if (just(this.cursors.down)) { this._albumCursor = Math.min(owned.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
+
+      // SPACE / A-button: toggle track or submit when full
+      if (just(this.spaceKey)) {
+        if (tracks.length === 7) {
+          this._submitAlbum(); return;
+        }
+        const rec = owned[this._albumCursor];
+        if (rec) {
+          const idx = tracks.indexOf(rec);
+          if (idx >= 0) { tracks.splice(idx, 1); }
+          else { tracks.push(rec); }
+          this._renderRecordShop();
+        }
         return;
-      }
-
-      const tabKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
-      if (Phaser.Input.Keyboard.JustDown(tabKey)) {
-        this._albumTrackFocus = !this._albumTrackFocus;
-        this._renderRecordShop();
-        return;
-      }
-
-      if (!this._albumTrackFocus) {
-        const owned = this.state.ownedRecords || [];
-        if (just(this.cursors.up))   { this._albumCursor = Math.max(0, this._albumCursor - 1); this._renderRecordShop(); return; }
-        if (just(this.cursors.down)) { this._albumCursor = Math.min(owned.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
-        if (just(this.spaceKey)) {
-          const rec = owned[this._albumCursor];
-          if (rec && !this._albumSelectedTracks.includes(rec) && this._albumSelectedTracks.length < 7) {
-            this._albumSelectedTracks.push(rec);
-            this._renderRecordShop();
-          }
-          return;
-        }
-      } else {
-        const tracks = this._albumSelectedTracks;
-        if (just(this.cursors.up)) {
-          const i = this._albumTrackCursor;
-          if (i > 0) { [tracks[i], tracks[i-1]] = [tracks[i-1], tracks[i]]; this._albumTrackCursor--; }
-          this._renderRecordShop(); return;
-        }
-        if (just(this.cursors.down)) {
-          const i = this._albumTrackCursor;
-          if (i < tracks.length - 1) { [tracks[i], tracks[i+1]] = [tracks[i+1], tracks[i]]; this._albumTrackCursor++; }
-          this._renderRecordShop(); return;
-        }
-        const bsKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.BACKSPACE);
-        if (Phaser.Input.Keyboard.JustDown(bsKey)) {
-          tracks.splice(this._albumTrackCursor, 1);
-          this._albumTrackCursor = Math.min(this._albumTrackCursor, tracks.length - 1);
-          this._renderRecordShop(); return;
-        }
       }
 
       if (just(this.enterKey)) {
-        if (!this._albumTitle) { this.showMsg('Type a title first! Press T'); return; }
-        if (this._albumSelectedTracks.length < 7) { this.showMsg(`Need ${7 - this._albumSelectedTracks.length} more tracks!`); return; }
-        if (!this.state.myAlbums) this.state.myAlbums = [];
-        this.state.myAlbums.push({ title: this._albumTitle, tracks: [...this._albumSelectedTracks] });
-        SaveSystem.saveNow(this.state);
-        this._albumTitle = '';
-        this._albumSelectedTracks = [];
-        this._albumTrackFocus = false;
-        this._albumCursor = 0;
-        this.recordShopTab = 4;
-        this._renderRecordShop();
-        this.showMsg('💿 Album submitted!');
+        this._submitAlbum(); return;
+      }
+
+      const bsKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.BACKSPACE);
+      if (Phaser.Input.Keyboard.JustDown(bsKey)) {
+        const rec = owned[this._albumCursor];
+        const idx = tracks.indexOf(rec);
+        if (idx >= 0) { tracks.splice(idx, 1); this._renderRecordShop(); }
         return;
       }
     }
     // Tab 4 (My Albums) is read-only
   }
 
-  _startAlbumTitleInput() {
-    this._albumMakingMode = 'typing';
-    this._renderRecordShop();
-    const capture = (event) => {
-      if (!this._albumMakingMode) { window.removeEventListener('keydown', capture); return; }
-      if (event.key === 'Enter') {
-        this._albumMakingMode = false;
-        window.removeEventListener('keydown', capture);
-        this._renderRecordShop();
-        return;
-      }
-      if (event.key === 'Escape') {
-        this._albumTitle = '';
-        this._albumMakingMode = false;
-        window.removeEventListener('keydown', capture);
-        this._renderRecordShop();
-        return;
-      }
-      if (event.key === 'Backspace') {
-        this._albumTitle = this._albumTitle.slice(0, -1);
-      } else if (event.key.length === 1 && this._albumTitle.length < 30) {
-        this._albumTitle += event.key;
-      }
-      this._renderRecordShop();
-    };
-    window.addEventListener('keydown', capture);
-  }
 
   openSnowballFightMenu() {
     this.snowballFightOpen = true;

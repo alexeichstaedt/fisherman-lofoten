@@ -178,7 +178,7 @@
     badgeTitle.textContent = '🥇 Badges';
     badgeTitle.style.cssText = `color:#64748b; font-size:11px; margin-bottom:3px;`;
     const badgeList = document.createElement('div');
-    badgeList.style.cssText = `color:#e2e8f0; font-size:11px; line-height:1.6;`;
+    badgeList.style.cssText = `color:#e2e8f0; font-size:18px; line-height:1.8;`;
     badgeList.textContent = badges.length ? badges.join(' ') : '—';
     badgeSection.appendChild(badgeTitle);
     badgeSection.appendChild(badgeList);

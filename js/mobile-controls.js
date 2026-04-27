@@ -375,7 +375,7 @@
     const notchGuard = 16;
 
     // ── Left panel: D-pad ───────────────────────────────────────────────────
-    const dCell  = Math.floor(Math.min(sideW * 0.27, h * 0.12));
+    const dCell  = Math.floor(Math.min(sideW * 0.34, h * 0.16));
     const dGap   = 2;
     const dGridW = 3 * dCell + 2 * dGap;
     const dLeft  = Math.floor((sideW - dGridW) / 2) + notchGuard;
@@ -414,8 +414,8 @@
     });
 
     // ── Left panel: CARD button ─────────────────────────────────────────────
-    const cardW = Math.floor((sideW - notchGuard * 2) * 0.80);
-    const cardH = Math.floor(h * 0.09);
+    const cardW = Math.floor((sideW - notchGuard * 2) * 0.75);
+    const cardH = Math.floor(h * 0.07);
     lBtnCard.style.width    = cardW + 'px';
     lBtnCard.style.height   = cardH + 'px';
     lBtnCard.style.fontSize = Math.floor(cardH * 0.42) + 'px';
@@ -425,11 +425,11 @@
     // ── Right panel: action buttons ─────────────────────────────────────────
     // Notch guard on the right side (right panel is on the right edge of the screen)
     const notchR = 16;
-    const aSize  = Math.floor(Math.min(sideW * 0.42, h * 0.16));
+    const aSize  = Math.floor(Math.min(sideW * 0.55, h * 0.22));
     const bSize  = Math.floor(aSize * 0.70);
     const smSize = Math.floor(aSize * 0.70);
-    const rcW    = Math.floor((sideW - notchR * 2) * 0.90);
-    const rcH    = Math.floor(h * 0.10);
+    const rcW    = Math.floor((sideW - notchR * 2) * 0.85);
+    const rcH    = Math.floor(h * 0.07);
     const aRight = notchR + Math.floor(sideW * 0.06);
 
     // Fish: top center

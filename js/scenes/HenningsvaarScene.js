@@ -213,7 +213,7 @@ window.HenningsvaarScene = class extends Phaser.Scene {
   isPassable(col, row) {
     if (col<0||row<0||col>=GAME_DATA.MAP_COLS||row>=GAME_DATA.MAP_ROWS) return false;
     const g = this.MAP.ground[row][col];
-    if (g==='O'||g==='D') return this.state.hasBoat;
+    if (g==='O'||g==='D') return this.state.hasBoat && this.waterGrid[row][col];
     if (this.npcs && this.npcs.some(n => n.tx === col && n.ty === row)) return false;
     return this.walkGrid[row][col];
   }
@@ -279,7 +279,10 @@ window.HenningsvaarScene = class extends Phaser.Scene {
     window.updateTop10(this.state, result.fish, 'Henningsvær');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
-    if (newTrophy) this.game.events.emit('trophy', result.fish.name);
+    if (newTrophy) {
+      this.game.events.emit('trophy', result.fish.name);
+      if (newTrophy.badgeUnlocked) this.showMsg('🏆 BADGE UNLOCKED: All Trophy Fish! 🏆');
+    }
     const _invResult = window.addFishToInventory(this.state, result.fish, {value: result.value});
     if (_invResult.added) {
       const _cabinBonus = window.cabinFishBonus(this.state);
@@ -372,7 +375,9 @@ window.HenningsvaarScene = class extends Phaser.Scene {
       this.state.ownedJackets.push(j.key);
       const allJacketKeys = ['im-yellow-jacket', 'im-pink-bape', 'im-norway-jacket'];
       if (allJacketKeys.every(k => this.state.ownedJackets.includes(k))) {
-        window.checkAndAwardBadge(this.state, 'all-jackets', 'All Jackets');
+        if (window.checkAndAwardBadge(this.state, 'all-jackets', 'All Jackets')) {
+          this.showMsg('🏆 BADGE UNLOCKED: All Jackets! 🧥');
+        }
       }
       this.state.aura = Math.max(-100, Math.min(100, (this.state.aura || 20) + 10));
     }

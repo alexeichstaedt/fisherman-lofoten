@@ -250,6 +250,7 @@ window.LeknesScene = class extends Phaser.Scene {
       const count = (this.state.trophies || []).length;
       const total = GAME_DATA.TROPHY_FISH.length;
       this.showMsg('🏆 NEW TROPHY: ' + result.fish.name + '! (' + count + '/' + total + ')');
+      if (newTrophy.badgeUnlocked) this.showMsg('🏆 BADGE UNLOCKED: All Trophy Fish! 🏆');
     }
     const _invResult = window.addFishToInventory(this.state, result.fish, {value: result.value});
     if (_invResult.added) {
@@ -533,7 +534,9 @@ window.LeknesScene = class extends Phaser.Scene {
     const picked = available[Math.floor(Math.random()*available.length)];
     this.state.animals.push(picked.id);
     if ((this.state.animals || []).length >= (window.ANIMALS || []).length) {
-      window.checkAndAwardBadge(this.state, 'all-animals', 'All Animals');
+      if (window.checkAndAwardBadge(this.state, 'all-animals', 'All Animals')) {
+        this.showMsg('🏆 BADGE UNLOCKED: All Animals! 🦁');
+      }
     }
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI', this.state);
@@ -585,12 +588,24 @@ window.LeknesScene = class extends Phaser.Scene {
       onComplete:()=>{ if(this.companionSprite) this.companionSprite.play(k+'-idle-'+dir,true); }});
   }
 
+  _calcFishSale(inv) {
+    const gross = inv.reduce((s,f) => s + (f.magical ? 2 : 1) * f.weight * GAME_DATA.FISH_PRICE_PER_KG, 0);
+    const taxable = gross > 50000;
+    const tax = taxable ? Math.round(gross * 0.25) : 0;
+    return { gross, tax, payout: gross - tax };
+  }
+
   updateFishMarket() {
     const inv = this.state.inventory;
     if (inv.length === 0) { this.shopBody.setText('No fish in inventory.\nCatch some fish first!'); return; }
-    let total = 0;
-    const lines = inv.map(f=>{ const val=(f.magical ? 2 : 1)*f.weight*GAME_DATA.FISH_PRICE_PER_KG; total+=val; return (f.magical?'✨ ':'')+f.name+' '+f.weight+'kg = '+val+' NOK'; });
-    lines.push('', 'Total: '+total+' NOK');
+    let gross = 0;
+    const lines = inv.map(f=>{ const val=(f.magical ? 2 : 1)*f.weight*GAME_DATA.FISH_PRICE_PER_KG; gross+=val; return (f.magical?'✨ ':'')+f.name+' '+f.weight+'kg = '+val+' NOK'; });
+    lines.push('', 'Gross: '+gross.toLocaleString()+' NOK');
+    if (gross > 50000) {
+      const tax = Math.round(gross * 0.25);
+      lines.push('⚠ NAV tax (25%): -'+tax.toLocaleString()+' NOK');
+      lines.push('You receive: '+(gross-tax).toLocaleString()+' NOK');
+    }
     this.shopBody.setText(lines.join('\n'));
   }
 
@@ -854,12 +869,13 @@ window.LeknesScene = class extends Phaser.Scene {
   sellAllFish() {
     const inv = this.state.inventory;
     if (!inv.length) return;
-    const total = inv.reduce((s,f)=>s+(f.magical ? 2 : 1)*f.weight*GAME_DATA.FISH_PRICE_PER_KG,0);
-    this.state.money += total;
+    const { gross, tax, payout } = this._calcFishSale(inv);
+    this.state.money += payout;
     this.state.inventory = [];
-    this.showMsg('Sold all fish for '+total+' NOK!');
+    const taxNote = tax > 0 ? '\n⚠ NAV tax (25%): -' + tax.toLocaleString() + ' NOK' : '';
+    this.showMsg('Sold all fish: ' + payout.toLocaleString() + ' NOK!' + taxNote);
     SaveSystem.save(this.state);
-    this.game.events.emit('updateUI',this.state);
+    this.game.events.emit('updateUI', this.state);
     this.updateFishMarket();
   }
 
@@ -871,8 +887,11 @@ window.LeknesScene = class extends Phaser.Scene {
     this.state.rod = rod.key;
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI',this.state);
-    if (this.state.rod === 'bape') window.checkAndAwardBadge(this.state, 'bape-rod', 'Bape Rod');
-    this.showMsg('Bought '+rod.name+'!');
+    if (this.state.rod === 'bape' && window.checkAndAwardBadge(this.state, 'bape-rod', 'Bape Rod')) {
+      this.showMsg('🏆 BADGE UNLOCKED: Bape Rod! 🎣  Bought ' + rod.name + '!');
+    } else {
+      this.showMsg('Bought ' + rod.name + '!');
+    }
     this.updateRodShop();
   }
 

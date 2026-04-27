@@ -25,7 +25,7 @@ window.FishingScene = class FishingScene extends Phaser.Scene {
 
     // Styled panel box
     this.add.rectangle(cx, cy + 5, 700, 360, 0x060f1e, 0.97)
-      .setStrokeStyle(2, 0x38bdf8).setDepth(1);
+      .setDepth(1);
 
     // Main status text
     this.statusText = this.add.text(cx, cy - 80, 'Casting line...', {
@@ -173,23 +173,26 @@ window.FishingScene = class FishingScene extends Phaser.Scene {
       this.mathProblem = window.generateAlgebraChallenge();
       this.typedAnswer = '';
       if (this.currentFish.isKillerWhale) {
-        this.statusText.setText('⚠ KILLER WHALE! ⚠').setColor('#ef4444');
-        this.trophyText.setText('Solve the algebra or perish!').setColor('#fbbf24');
+        this.trophyText.setText('⚠ KILLER WHALE! ⚠').setColor('#ef4444');
       } else {
-        this.statusText.setText(this.currentFish.name).setColor('#ef4444');
-        this.trophyText.setText(this.currentFish.weight + 'kg — Solve the algebra to reel it in!').setColor('#fbbf24');
+        this.trophyText.setText(this.currentFish.name + ' · ' + this.currentFish.weight + 'kg — Algebra challenge!').setColor('#fbbf24');
       }
-      this.subText.setText('');
+      this.statusText.setStyle({fontSize:'22px', color:'#ffffff', stroke:'#000', strokeThickness:5, fontFamily:'monospace'});
+      this.statusText.setText(this.mathProblem.question);
+      this.subText.setText('Solve for x').setColor('#94a3b8').setStyle({fontSize:'16px', fontFamily:'monospace'});
       this.timerText.setText('⚠ Time: 20s').setColor('#ef4444');
       this.answerText.setText('Answer: _');
-      this.hintText.setText(this.mathProblem.question).setStyle({fontSize:'20px', color:'#ffffff', fontFamily:'monospace'});
+      this.hintText.setText('Type digits  ENTER to submit  ESC to let go').setStyle({fontSize:'13px', color:'#64748b', fontFamily:'monospace'});
       this.timeLeft = 20;
     } else {
       this.isKillerWhaleChallenge = false;
       this.mathProblem = window.generateMathProblem(this.currentFish.weight, this.fishingData.playerLevel);
       this.typedAnswer = '';
+      // Reset statusText to default style before showing question
+      this.statusText.setStyle({fontSize:'32px', color:'#ffffff', stroke:'#000', strokeThickness:6, fontFamily:'monospace'});
       this.statusText.setText(this.mathProblem.question).setColor(isTrophy ? '#f59e0b' : '#ffffff');
       this.trophyText.setText(isTrophy ? '🏆 TROPHY FISH! 🏆' : '').setColor('#f59e0b');
+      this.subText.setStyle({fontSize:'18px', color:'#94a3b8', fontFamily:'monospace'});
       this.subText.setText(this.currentFish.weight + 'kg  ' + this.currentFish.name).setColor(isTrophy ? '#fef08a' : '#93c5fd');
       this.answerText.setText('Answer: _');
       this.hintText.setText('Type digits  ENTER to submit  ESC to let go').setStyle({fontSize:'13px', color:'#64748b', fontFamily:'monospace'});

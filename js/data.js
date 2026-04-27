@@ -579,6 +579,8 @@ window.buildMapGrids = function(map) {
         if (r<ROWS && c<COLS) {
           walkGrid[r][c] = def.walkable;
           if (def.water) waterGrid[r][c] = true;
+          // Solid land objects (e.g. mountains) on water tiles block boats too
+          else if (!def.walkable) waterGrid[r][c] = false;
         }
       }
     }
@@ -1023,6 +1025,8 @@ window.buildMapGrids = function(map) {
         if (r<ROWS && c<COLS) {
           walkGrid[r][c] = def.walkable;
           if (def.water) waterGrid[r][c] = true;
+          // Solid land objects (e.g. mountains) on water tiles block boats too
+          else if (!def.walkable) waterGrid[r][c] = false;
         }
       }
     }
@@ -1491,10 +1495,10 @@ window.addTrophy = function(state, fishName) {
   if (!state.trophies) state.trophies = [];
   if (state.trophies.includes(fishName)) return false;
   state.trophies.push(fishName);
-  if (state.trophies.length >= GAME_DATA.TROPHY_FISH.length) {
-    window.checkAndAwardBadge(state, 'all-trophy-fish', 'All Trophy Fish');
-  }
-  return true;
+  const badgeUnlocked = state.trophies.length >= GAME_DATA.TROPHY_FISH.length
+    ? window.checkAndAwardBadge(state, 'all-trophy-fish', 'All Trophy Fish')
+    : false;
+  return { added: true, badgeUnlocked };
 };
 
 window.addXP = function(state, amount) {

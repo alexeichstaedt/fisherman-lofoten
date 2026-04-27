@@ -498,7 +498,10 @@ window.KakernScene = class extends Phaser.Scene {
     window.updateTop10(this.state, result.fish, 'Kåkern');
     if (leveled) this.game.events.emit('levelUp', this.state.level);
     const newTrophy = addTrophy(this.state, result.fish.name);
-    if (newTrophy) this.game.events.emit('trophy', result.fish.name);
+    if (newTrophy) {
+      this.game.events.emit('trophy', result.fish.name);
+      if (newTrophy.badgeUnlocked) this.showMsg('🏆 BADGE UNLOCKED: All Trophy Fish! 🏆');
+    }
     const _invResult = window.addFishToInventory(this.state, result.fish, {value: result.value});
     if (_invResult.added) {
       const _cabinBonus = window.cabinFishBonus(this.state);
@@ -593,7 +596,9 @@ window.KakernScene = class extends Phaser.Scene {
     SaveSystem.save(this.state);
     this.game.events.emit('updateUI', this.state);
     if ((this.state.ownedCabins || []).length >= 3) {
-      window.checkAndAwardBadge(this.state, 'three-cabins', '3 Rental Cabins');
+      if (window.checkAndAwardBadge(this.state, 'three-cabins', '3 Rental Cabins')) {
+        this.showMsg('🏆 BADGE UNLOCKED: 3 Rental Cabins! 🏠');
+      }
     }
     this.drawRentalCabinLabels();
     this.cmStatusTxt.setText('🏠 ' + cab.name + ' is now your rental cabin!');
@@ -984,6 +989,7 @@ window.KakernScene = class extends Phaser.Scene {
           const leveled = addXP(this.state, 100000);
           if (leveled) this.game.events.emit('levelUp', this.state.level);
           window.checkAndAwardBadge(this.state, 'upgraded-cabin', 'Upgraded Cabin');
+          // Badge msg won't show — scene restarts immediately below; badge is saved above
           SaveSystem.saveNow(this.state);
           this.game.events.emit('updateUI', this.state);
           this.closeDuffelMenu();
