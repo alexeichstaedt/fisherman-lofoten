@@ -15,6 +15,17 @@ window.MusicPlayer = (function () {
   let _idx      = 0;
   let _started  = false;
   let _onchange = null;
+  let _pending  = false;  // true when play() was blocked by browser autoplay policy
+
+  // Retry playback on the next user gesture if autoplay was blocked
+  function _tryResume() {
+    if (!_pending) return;
+    _pending = false;
+    current.play().catch(() => { _pending = true; });
+  }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(e =>
+    document.addEventListener(e, _tryResume, { passive: true })
+  );
 
   function _slug(title) {
     return title
@@ -42,7 +53,7 @@ window.MusicPlayer = (function () {
   function _play() {
     if (!_playlist.length) return;
     current.src = _src(_playlist[_idx]);
-    current.play().catch(() => {});  // silent fail if file not yet added
+    current.play().catch(() => { _pending = true; });  // retry on next gesture if blocked
     _preloadNext();
     if (_onchange) _onchange(_playlist[_idx], _idx);
   }
