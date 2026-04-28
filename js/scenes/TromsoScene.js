@@ -36,7 +36,7 @@ window.TromsoScene = class extends Phaser.Scene {
     this.nlOverlay = null;
     this.nlDarkOverlay = null;
     this.recordShopOpen = false;
-    this.recordShopTab = 0;       // 0=Shop, 1=Buy, 2=My Records, 3=Make Album, 4=My Albums
+    this.recordShopTab = 0;       // 0=Buy Records, 1=My Records, 2=Make Album, 3=My Albums
     this._recordShopObjects = [];
     this._albumMakingMode = false; // sub-state within Make Album tab
     this._albumTitle = '';
@@ -513,7 +513,7 @@ window.TromsoScene = class extends Phaser.Scene {
         }
         this.closeAll(); return;
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         if (this.fishBuyerConfirmOpen) {
           this.fishBuyerConfirmOpen = false;
           const inv = this.state.inventory;
@@ -666,7 +666,7 @@ window.TromsoScene = class extends Phaser.Scene {
     this.recordShopLayer.setVisible(true);
 
     const cx = 400, cy = 320, W = 640, H = 460;
-    const tabs = ['🛒 Shop', '🎵 Buy Records', '💿 My Records', '🎤 Make Album', '📀 My Albums'];
+    const tabs = ['🎵 Buy Records', '💿 My Records', '🎤 Make Album', '📀 My Albums'];
 
     const bg = this.add.rectangle(cx, cy, W, H, 0x0f172a, 0.98)
       .setStrokeStyle(2, 0xa78bfa).setDepth(60).setScrollFactor(0);
@@ -699,16 +699,6 @@ window.TromsoScene = class extends Phaser.Scene {
     const lineH = 24;
 
     if (this.recordShopTab === 0) {
-      // Radio is always included — show status only
-      const t = this.add.text(cx, contentY + 40, '📻 Radio — Included with your player kit!', {
-        fontSize: '13px', color: '#4ade80', fontFamily: 'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      const hint = this.add.text(cx, contentY + 70, 'Tune stations with R key while exploring', {
-        fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'
-      }).setOrigin(0.5).setDepth(61).setScrollFactor(0);
-      this._recordShopObjects.push(t, hint);
-
-    } else if (this.recordShopTab === 1) {
       const forSale = (window.RECORDS_FOR_SALE || []).filter(r => !(this.state.ownedRecords || []).includes(r));
       if (forSale.length === 0) {
         const t = this.add.text(cx, contentY + 60, 'You own all available records!', {
@@ -730,7 +720,6 @@ window.TromsoScene = class extends Phaser.Scene {
           }).setDepth(61).setScrollFactor(0);
           this._recordShopObjects.push(t);
         });
-        const scrollHint = forSale.length > maxVisible ? `  ↑↓ scroll` : '';
         const info = this.add.text(cx, cy + H/2 - 40,
           `${this._albumCursor + 1} / ${forSale.length}  |  5,000 NOK + 25 AURA each`,
           { fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }
@@ -741,7 +730,7 @@ window.TromsoScene = class extends Phaser.Scene {
         this._recordShopObjects.push(info, hint);
       }
 
-    } else if (this.recordShopTab === 2) {
+    } else if (this.recordShopTab === 1) {
       const owned = this.state.ownedRecords || [];
       if (owned.length === 0) {
         const t = this.add.text(cx, contentY + 60, 'No records yet!', {
@@ -769,10 +758,10 @@ window.TromsoScene = class extends Phaser.Scene {
         this._recordShopObjects.push(hint);
       }
 
-    } else if (this.recordShopTab === 3) {
+    } else if (this.recordShopTab === 2) {
       this._renderMakeAlbumTab(cx, cy, W, H, contentY, lineH);
 
-    } else if (this.recordShopTab === 4) {
+    } else if (this.recordShopTab === 3) {
       const albums = this.state.myAlbums || [];
       if (albums.length === 0) {
         const t = this.add.text(cx, contentY + 60, 'No albums yet. Make one!', {
@@ -871,7 +860,7 @@ window.TromsoScene = class extends Phaser.Scene {
     this._albumTrackCursor = 0;
     SaveSystem.saveNow(this.state);
     this.game.events.emit('updateUI', this.state);
-    this.recordShopTab = 4;
+    this.recordShopTab = 3;
     this._renderRecordShop();
     this.showMsg('💿 Album ' + albumNum + ' saved — tuned to Station ' + this.state.radioStation + '!');
   }
@@ -881,19 +870,19 @@ window.TromsoScene = class extends Phaser.Scene {
 
     if (just(this.escKey)) { this.closeAll(); return; }
 
-    if (this.recordShopTab === 3 && this._albumMakingMode === 'typing') {
+    if (this.recordShopTab === 2 && this._albumMakingMode === 'typing') {
       return;
     }
 
     if (just(this.cursors.left)) {
-      this.recordShopTab = (this.recordShopTab - 1 + 5) % 5;
+      this.recordShopTab = (this.recordShopTab - 1 + 4) % 4;
       this._albumCursor = 0;
       this._albumMakingMode = false;
       this._renderRecordShop();
       return;
     }
     if (just(this.cursors.right)) {
-      this.recordShopTab = (this.recordShopTab + 1) % 5;
+      this.recordShopTab = (this.recordShopTab + 1) % 4;
       this._albumCursor = 0;
       this._albumMakingMode = false;
       this._renderRecordShop();
@@ -901,11 +890,6 @@ window.TromsoScene = class extends Phaser.Scene {
     }
 
     if (this.recordShopTab === 0) {
-      // Radio is always included — no purchase needed
-      return;
-    }
-
-    if (this.recordShopTab === 1) {
       const forSale = (window.RECORDS_FOR_SALE || []).filter(r => !(this.state.ownedRecords || []).includes(r));
       if (just(this.cursors.up))   { this._albumCursor = Math.max(0, this._albumCursor - 1); this._renderRecordShop(); return; }
       if (just(this.cursors.down)) { this._albumCursor = Math.min(forSale.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
@@ -942,12 +926,12 @@ window.TromsoScene = class extends Phaser.Scene {
         return;
       }
 
-    } else if (this.recordShopTab === 2) {
+    } else if (this.recordShopTab === 1) {
       const owned = this.state.ownedRecords || [];
       if (just(this.cursors.up))   { this._albumCursor = Math.max(0, this._albumCursor - 1); this._renderRecordShop(); return; }
       if (just(this.cursors.down)) { this._albumCursor = Math.min(owned.length - 1, this._albumCursor + 1); this._renderRecordShop(); return; }
 
-    } else if (this.recordShopTab === 3) {
+    } else if (this.recordShopTab === 2) {
       const owned = this.state.ownedRecords || [];
       const tracks = this._albumSelectedTracks;
 
@@ -981,7 +965,7 @@ window.TromsoScene = class extends Phaser.Scene {
         return;
       }
     }
-    // Tab 4 (My Albums) is read-only
+    // Tab 3 (My Albums) is read-only
   }
 
 

@@ -1009,7 +1009,7 @@ window.KakernScene = class extends Phaser.Scene {
 
     // Animal reveal popup — ENTER = follow/stop, ESC = close
     if (this.animalRevealOpen) {
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         const animal = this.animalRevealAnimal;
         const def = animal ? (window.ANIMALS.find(a => a.id === animal.id) || {}) : {};
         if (animal) {
@@ -1045,7 +1045,7 @@ window.KakernScene = class extends Phaser.Scene {
     if (this.cabinMenuOpen) {
       if (Phaser.Input.Keyboard.JustDown(this.cursors.up))   { this.cabinMenuIndex=(this.cabinMenuIndex-1+window.RENTAL_CABINS.length+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
       if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) { this.cabinMenuIndex=(this.cabinMenuIndex+1)%(window.RENTAL_CABINS.length+1); this.updateCabinMenuDisplay(); }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) this.executeCabinPurchase();
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) this.executeCabinPurchase();
       return;
     }
 

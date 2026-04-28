@@ -153,12 +153,11 @@
     avatarWrap.appendChild(avatarImg);
 
     const hName = document.createElement('div');
-    const passportFlags = (state.hasNorPassport ? '🇳🇴' : '') + (state.hasUsaPassport ? (state.hasNorPassport ? ' 🇺🇸' : '🇺🇸') : '');
-    hName.textContent = name + passportFlags;
+    hName.textContent = name;
     hName.style.cssText = `color:#e2e8f0; font-size:14px; font-weight:bold; margin-top:8px; letter-spacing:0.5px;`;
 
     const hLevel = document.createElement('div');
-    hLevel.textContent = `⭐ Level ${level}  (ATK: ${patk}, DEF: ${pdef})`;
+    hLevel.textContent = `⭐ Level ${level}`;
     hLevel.style.cssText = `color:#f59e0b; font-size:12px; margin-top:2px;`;
 
     header.appendChild(avatarWrap);
@@ -201,18 +200,7 @@
     body.appendChild(statRow('⚔️', 'Top Hater',      haterLabel,        '#fb923c'));
     body.appendChild(statRow('🏆', 'Tournament Champion', tournamentLabel,   '#f59e0b'));
 
-    // ── Badges row ───────────────────────────────────────────────────────
-    const badgeSection = document.createElement('div');
-    badgeSection.style.cssText = `padding: 6px 0; border-bottom: 1px solid #1e293b;`;
-    const badgeTitle = document.createElement('div');
-    badgeTitle.textContent = '🥇 Badges';
-    badgeTitle.style.cssText = `color:#64748b; font-size:11px; margin-bottom:3px;`;
-    const badgeList = document.createElement('div');
-    badgeList.style.cssText = `color:#e2e8f0; font-size:18px; line-height:1.8;`;
-    badgeList.textContent = badges.length ? badges.join(' ') : '—';
-    badgeSection.appendChild(badgeTitle);
-    badgeSection.appendChild(badgeList);
-    body.appendChild(badgeSection);
+    body.appendChild(statRow('🥇', 'Badges', `${badges.length} / 8`, '#f59e0b'));
 
     // ── Footer ────────────────────────────────────────────────────────────
     const footer = document.createElement('div');

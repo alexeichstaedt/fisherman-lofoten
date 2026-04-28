@@ -22,7 +22,7 @@ window.GAME_DATA = {
     kåkern:       [ {name:'Sea Trout',minW:2,maxW:12,rarity:'common',xpMult:1}, {name:'Atlantic Cod',minW:2,maxW:20,rarity:'common',xpMult:1}, {name:'Haddock',minW:1,maxW:5,rarity:'common',xpMult:1}, {name:'Arctic Salmon',minW:10,maxW:30,rarity:'legendary',xpMult:1,requiresDeepOcean:true,pricePerKg:100} ],
     kvalvika:     [ {name:'Atlantic Cod',minW:2,maxW:20,rarity:'common',xpMult:1}, {name:'Pollock',minW:5,maxW:20,rarity:'uncommon',xpMult:1}, {name:'Coalfish',minW:1,maxW:15,rarity:'common',xpMult:1}, {name:'Giant Halibut',minW:150,maxW:300,rarity:'legendary',xpMult:1,requiresDeepOcean:true,pricePerKg:100}, {name:'Killer Whale',minW:3000,maxW:4000,rarity:'secret',xpMult:1,requiresDeepOcean:true,isKillerWhale:true} ],
     henningsvær: [ {name:'Mackerel',minW:1,maxW:8,rarity:'common',xpMult:1}, {name:'Pollock',minW:5,maxW:25,rarity:'uncommon',xpMult:1}, {name:'Atlantic Cod',minW:2,maxW:20,rarity:'common',xpMult:1}, {name:'Wicked Tuna',minW:200,maxW:450,rarity:'legendary',xpMult:1,requiresDeepOcean:true,pricePerKg:100} ],
-    tromso:       [ {name:'Arctic Cod',minW:1,maxW:5,rarity:'common',xpMult:1}, {name:'Polar Herring',minW:1,maxW:5,rarity:'common',xpMult:1}, {name:'Arctic Char',minW:1,maxW:10,rarity:'uncommon',xpMult:1}, {name:'Greenland Shark',minW:400,maxW:600,rarity:'rare',xpMult:1,requiresDeepOcean:true}, {name:'Narwhal',minW:600,maxW:1200,rarity:'rare',xpMult:1,requiresDeepOcean:true}, {name:'Beluga Whale',minW:600,maxW:1200,rarity:'rare',xpMult:1,requiresDeepOcean:true}, {name:'Pilot Whale',minW:1000,maxW:2000,rarity:'legendary',xpMult:1,requiresDeepOcean:true}, {name:'Magical Greenland Shark',minW:600,maxW:1000,rarity:'legendary',xpMult:1,requiresDeepOcean:true,requiresNorthernLights:true,pricePerKg:100} ],
+    tromso:       [ {name:'Arctic Cod',minW:1,maxW:5,rarity:'common',xpMult:1}, {name:'Polar Herring',minW:1,maxW:5,rarity:'common',xpMult:1}, {name:'Arctic Char',minW:1,maxW:10,rarity:'uncommon',xpMult:1}, {name:'Greenland Shark',minW:400,maxW:600,rarity:'rare',xpMult:1,requiresDeepOcean:true}, {name:'Narwhal',minW:600,maxW:1200,rarity:'rare',xpMult:1,requiresDeepOcean:true,poolWeight:2}, {name:'Beluga Whale',minW:600,maxW:1200,rarity:'rare',xpMult:1,requiresDeepOcean:true,poolWeight:2}, {name:'Pilot Whale',minW:1000,maxW:2000,rarity:'legendary',xpMult:1,requiresDeepOcean:true,poolWeight:3}, {name:'Magical Greenland Shark',minW:600,maxW:1000,rarity:'legendary',xpMult:1,requiresDeepOcean:true,requiresNorthernLights:true,pricePerKg:100} ],
   },
   RARITY_WEIGHTS: { common:55, uncommon:22, rare:7, legendary:7 },
   TROPHY_FISH: ['Super Skrei','Arctic Salmon','Giant Halibut','Wicked Tuna','Magical Greenland Shark'],
@@ -1459,7 +1459,7 @@ window.getRandomFish = function(location, hasBoat, isDeepOcean, northernLightsAc
     }
   }
   const normal = available.filter(f => !f.isKillerWhale);
-  normal.forEach(f => { for(let i=0;i<(weights[f.rarity]||10);i++) pool.push(f); });
+  normal.forEach(f => { const w = f.poolWeight !== undefined ? f.poolWeight : (weights[f.rarity] || 10); for(let i=0;i<w;i++) pool.push(f); });
   if (!pool.length) return null;
   const fish = pool[Math.floor(Math.random()*pool.length)];
   let weight = Phaser.Math.Between(fish.minW, fish.maxW);

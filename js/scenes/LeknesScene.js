@@ -1018,7 +1018,7 @@ window.LeknesScene = class extends Phaser.Scene {
         this.advanceDialog();
         return;
       }
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         if (this.tournamentConfirmOpen) {
           this.tournamentConfirmOpen = false;
           this.closeAll();

@@ -57,7 +57,9 @@ window.UIScene = class extends Phaser.Scene {
 
     this.updateDisplay();
 
-    // Initialize radio visibility
+    // Start music — register callback first so the initial song updates the display
+    MusicPlayer.onSongChange(() => this._updateRadioDial());
+    this._startMusic();
     this._updateRadioDial();
 
     this.game.events.on('updateUI', state => { this.state = state; this.updateDisplay(); });
@@ -107,6 +109,15 @@ window.UIScene = class extends Phaser.Scene {
     }
   }
 
+  _startMusic() {
+    const s = this.state || {};
+    const stations = this._getRadioStations();
+    const stIdx  = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
+    const songs  = stations[stIdx]?.songs || [];
+    const songIdx = Math.max(0, Math.min(s.radioSongIndex || 0, songs.length - 1));
+    MusicPlayer.start(songs.length ? songs : ['Fisherman'], songIdx);
+  }
+
   _getRadioStations() {
     const s = this.state || {};
     const stations = [];
@@ -128,11 +139,9 @@ window.UIScene = class extends Phaser.Scene {
     this.radioSongText.setVisible(false);
     this.radioHint.setVisible(false);
     if (visible) {
-      const stations = this._getRadioStations();
-      const stIdx   = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
-      const stName  = stations[stIdx].name;
-      // Truncate to fit within the 87px text area (~13 chars at monospace 10px)
-      this.radioStText.setText(stName.length > 13 ? stName.slice(0, 12) + '…' : stName);
+      const nowPlaying = MusicPlayer.currentTitle();
+      const label = nowPlaying || 'My Records';
+      this.radioStText.setText(label.length > 13 ? label.slice(0, 12) + '…' : label);
     }
   }
 
@@ -140,20 +149,19 @@ window.UIScene = class extends Phaser.Scene {
     const s = this.state;
     if (!s || !s.hasRadio) return;
     const stations = this._getRadioStations();
-    s.radioStation    = ((s.radioStation || 0) + dir + stations.length) % stations.length;
-    s.radioSongIndex  = 0;
+    s.radioStation   = ((s.radioStation || 0) + dir + stations.length) % stations.length;
+    s.radioSongIndex = 0;
     SaveSystem.save(s);
+    const songs = stations[s.radioStation]?.songs || [];
+    MusicPlayer.setPlaylist(songs.length ? songs : ['Fisherman'], 0);
     this._updateRadioDial();
   }
 
   _cycleRadioSong(dir) {
     const s = this.state;
     if (!s || !s.hasRadio) return;
-    const stations = this._getRadioStations();
-    const stIdx   = Math.max(0, Math.min(s.radioStation || 0, stations.length - 1));
-    const songs   = stations[stIdx].songs || [];
-    if (songs.length === 0) return;
-    s.radioSongIndex = ((s.radioSongIndex || 0) + dir + songs.length) % songs.length;
+    MusicPlayer.nextSong();
+    s.radioSongIndex = MusicPlayer.currentIndex();
     SaveSystem.save(s);
     this._updateRadioDial();
   }

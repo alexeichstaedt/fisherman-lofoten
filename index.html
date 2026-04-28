@@ -16,6 +16,12 @@
   <link rel="apple-touch-icon" href="assets/favicon.png">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+    *:not(input):not(textarea) {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
     html {
       /* Lock the root so iOS keyboard can never push content up */
       position: fixed;
@@ -105,6 +111,7 @@
   <script src="js/drag-catch.js"></script>
   <script src="js/mobile-controls.js"></script>
   <script src="js/player-card.js"></script>
+  <script src="js/music-player.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

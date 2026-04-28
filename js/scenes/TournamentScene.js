@@ -249,7 +249,7 @@ window.TournamentScene = class extends Phaser.Scene {
     this.moveCooldown -= delta;
 
     if (this.resultOpen) {
-      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.escKey)) {
+      if (Phaser.Input.Keyboard.JustDown(this.enterKey) || Phaser.Input.Keyboard.JustDown(this.escKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
         this.returnToLeknes();
       }
       return;
