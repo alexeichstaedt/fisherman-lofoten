@@ -25,4 +25,8 @@ const config = {
   pixelArt: true,
   roundPixels: true,
 };
-window.game = new Phaser.Game(config);
+
+// Wait for Firebase to seed the save before starting Phaser
+FirebaseSave.init().then(() => {
+  window.game = new Phaser.Game(config);
+});

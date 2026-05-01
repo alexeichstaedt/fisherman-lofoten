@@ -58,7 +58,9 @@
       if (window.SaveSystem) window.SaveSystem.save(state);
     }
 
-    return [...earned];
+    // Return only known badge IDs — filters out any legacy/removed badges in saved state
+    const knownIds = Object.keys(BADGE_EMOJIS);
+    return [...earned].filter(id => knownIds.includes(id));
   }
 
   window.showPlayerCard = function () {

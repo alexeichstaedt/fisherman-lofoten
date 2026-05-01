@@ -117,8 +117,12 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     this.birdRadius = 9;
   }
 
-  update() {
+  update(time, delta) {
     if (this.dead) return;
+
+    // dt = 1.0 at 60 fps, 0.5 at 120 fps, 2.0 at 30 fps
+    // Keeps physics identical regardless of monitor refresh rate
+    const dt = delta / 16.667;
 
     const flap = Phaser.Input.Keyboard.JustDown(this.spaceKey) ||
                  Phaser.Input.Keyboard.JustDown(this.upKey);
@@ -129,9 +133,9 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     }
 
     // Bird physics — ceiling clamps, ocean kills
-    this.birdVY += this.gravity;
+    this.birdVY += this.gravity * dt;
     if (flap) this.birdVY = this.flapPower;
-    this.birdY += this.birdVY;
+    this.birdY += this.birdVY * dt;
     // Ceiling = hard wall, just bounce off
     if (this.birdY <= this.birdRadius) {
       this.birdY = this.birdRadius;
@@ -145,15 +149,16 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     if (this.bird.setPosition) this.bird.setPosition(this.birdX, this.birdY);
 
     // Speed ramp: accelerates faster as score climbs, higher cap
-    this.speedTimer++;
+    this.speedTimer += dt;
     const rampEvery = this.score >= 40 ? 200 : this.score >= 20 ? 280 : 400;
-    if (this.speedTimer % rampEvery === 0) {
+    if (this.speedTimer >= rampEvery) {
+      this.speedTimer -= rampEvery;
       const inc = this.score >= 40 ? 0.6 : this.score >= 20 ? 0.5 : 0.4;
       this.speed = Math.min(this.speed + inc, 14);
     }
 
     // Spawn clouds
-    this.spawnTimer++;
+    this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnTimer = 0;
       this._spawnWave();
@@ -162,7 +167,7 @@ window.BirdWatchingScene = class BirdWatchingScene extends Phaser.Scene {
     // Move + check clouds
     const toRemove = [];
     for (const c of this.clouds) {
-      c.sprite.x -= this.speed;
+      c.sprite.x -= this.speed * dt;
       if (!c.passed && c.sprite.x + c.sprite.displayWidth / 2 < this.birdX) {
         c.passed = true;
         this.score++;

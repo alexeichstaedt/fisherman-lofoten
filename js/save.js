@@ -1,27 +1,50 @@
 // Fisherman: Lofoten — © 2026 Ikke Musikk Eichstaedt. All rights reserved.
 window.SaveSystem = {
   DEFAULT: { playerName:'Ikke Musikk', level:1, xp:0, money:1000, rod:null, hasBoat:false, inventory:[], trophies:[], top10:[], grandTrophy:false, location:'leknes', x:14, y:14, characterKey:'ikke-musikk', companion:null, animals:[], hasTromsoTicket:false, followAnimalId:null, usedIdioms:[], ownedJackets:[], ownedCabins:[], cabinEarnings:0, hasFerryPass:false, hasSeenWelcome:false, hasReceivedStarterKit:false, aura: 20, playerItems: [], baddiesCaught: [], hatersDefeated: [], usaPassportTx: null, norPassportTx: null, norPassportTy: null, hasUsaPassport: false, hasNorPassport: false, tournamentActive: false, tournamentBestFish: null, tournamentEndTime: null, ownedRecords: ['Fisherman','Stranger on the Highway','Kvalvika Beach','Northern Trucker','More than a Brother','Arktis Magi','Rockstar'], myAlbums: [], hasRadio: true, radioStation: 0, radioSongIndex: 0, dragCatches: [], hasKvalvikaKey: false, hasBadderCabin: false, hasTromsoSongs: false, followingBaddieName: null, skilpaddeLastPlayed: null, totalFishCaught: 0, badges: [], tournamentBestPlace: null, allTimeBestBaddie: null },
+
+  // In-memory cache — primary store when localStorage is blocked (iframe / third-party context)
+  _mem: null,
   _timer: null,
   _pending: null,
+
+  _ls: {
+    get()    { try { return localStorage.getItem('lofoten_rpg'); }       catch(e) { return null; } },
+    set(v)   { try { localStorage.setItem('lofoten_rpg', v); }           catch(e) {} },
+    remove() { try { localStorage.removeItem('lofoten_rpg'); }            catch(e) {} },
+  },
+
   save(s) {
+    this._mem     = s;
     this._pending = s;
     if (this._timer) return;
     this._timer = setTimeout(() => {
-      if (this._pending) localStorage.setItem('lofoten_rpg', JSON.stringify(this._pending));
-      this._timer = null;
+      if (this._pending) {
+        this._ls.set(JSON.stringify(this._pending));
+        if (window.FirebaseSave) window.FirebaseSave.saveAsync(this._pending);
+      }
+      this._timer   = null;
       this._pending = null;
     }, 50);
   },
+
   saveNow(s) {
     if (this._timer) { clearTimeout(this._timer); this._timer = null; }
     this._pending = null;
-    localStorage.setItem('lofoten_rpg', JSON.stringify(s));
+    this._mem = s;
+    this._ls.set(JSON.stringify(s));
+    if (window.FirebaseSave) window.FirebaseSave.saveAsync(s);
   },
+
   load() {
-    const s=localStorage.getItem('lofoten_rpg');
-    if (!s) return {...this.DEFAULT};
-    const raw=JSON.parse(s);
-    const d={...this.DEFAULT,...raw};
+    // Prefer in-memory (seeded by Firebase on startup, or last save this session)
+    const raw = this._mem ? JSON.stringify(this._mem) : this._ls.get();
+    if (!raw) return {...this.DEFAULT};
+    const parsed = JSON.parse(raw);
+    return this._migrate(parsed);
+  },
+
+  _migrate(raw) {
+    const d = {...this.DEFAULT, ...raw};
     if (d.characterKey==='player') d.characterKey='ikke-musikk';
     if (!d.animals) d.animals=[];
     if (!d.trophies) d.trophies=[];
@@ -52,7 +75,6 @@ window.SaveSystem = {
     if (!Array.isArray(d.badges)) d.badges = [];
     if (typeof d.tournamentBestPlace === 'undefined') d.tournamentBestPlace = null;
     if (typeof d.allTimeBestBaddie === 'undefined') d.allTimeBestBaddie = null;
-    // Backwards compat: existing saves already have rod/travel — treat them as onboarded
     if (!('hasReceivedStarterKit' in raw)) {
       d.hasReceivedStarterKit = true;
       d.hasFerryPass = true;
@@ -60,22 +82,32 @@ window.SaveSystem = {
     }
     return d;
   },
-  clear() { localStorage.removeItem('lofoten_rpg'); },
+
+  clear() {
+    this._mem = null;
+    this._ls.remove();
+    if (window.FirebaseSave) window.FirebaseSave.clearAsync();
+  },
 };
 
 // One-time rescue: reset player to ferry captain spawn if position was corrupted
 (function() {
-  const raw = localStorage.getItem('lofoten_rpg');
-  if (!raw) return;
-  const safeSpawns = { leknes:{x:12,y:18}, tromso:{x:17,y:26}, henningsvær:{x:15,y:23}, kåkern:{x:11,y:7}, kvalvika:{x:18,y:17}, reine:{x:8,y:14} };
-  const d = JSON.parse(raw);
-  const spawn = safeSpawns[d.location];
-  if (spawn) { d.x = spawn.x; d.y = spawn.y; localStorage.setItem('lofoten_rpg', JSON.stringify(d)); }
+  try {
+    const raw = localStorage.getItem('lofoten_rpg');
+    if (!raw) return;
+    const safeSpawns = { leknes:{x:12,y:18}, tromso:{x:17,y:26}, henningsvær:{x:15,y:23}, kåkern:{x:11,y:7}, kvalvika:{x:18,y:17}, reine:{x:8,y:14} };
+    const d = JSON.parse(raw);
+    const spawn = safeSpawns[d.location];
+    if (spawn) { d.x = spawn.x; d.y = spawn.y; localStorage.setItem('lofoten_rpg', JSON.stringify(d)); }
+  } catch(e) {}
 })();
 
 window.addEventListener('beforeunload', () => {
-  if (SaveSystem._pending) {
-    localStorage.setItem('lofoten_rpg', JSON.stringify(SaveSystem._pending));
+  const data = SaveSystem._pending || SaveSystem._mem;
+  if (data) {
+    try { localStorage.setItem('lofoten_rpg', JSON.stringify(data)); } catch(e) {}
+    if (window.FirebaseSave) window.FirebaseSave.saveAsync(data);
     SaveSystem._pending = null;
   }
 });
+

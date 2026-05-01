@@ -70,6 +70,22 @@
     }
     #controls-left  { left:  0; border-right: 2px solid #1e3a5f; }
     #controls-right { right: 0; border-left:  2px solid #1e3a5f; }
+
+    /* Firebase loading overlay */
+    #firebase-loading {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0a0a1a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+    }
+    #firebase-loading-text {
+      color: #7dd3fc; font-family: monospace; font-size: 16px;
+      letter-spacing: 0.05em;
+    }
+    #firebase-loading-sub {
+      color: #334155; font-family: monospace; font-size: 11px;
+    }
   </style>
 </head>
 <body>
@@ -77,6 +93,13 @@
   <div id="controls-panel"></div>
   <div id="controls-left"></div>
   <div id="controls-right"></div>
+
+  <!-- Loading overlay shown while Firebase authenticates -->
+  <div id="firebase-loading">
+    <div style="font-size:48px">🎣</div>
+    <div id="firebase-loading-text">🐟 Loading...</div>
+    <div id="firebase-loading-sub">Fisherman: Lofoten</div>
+  </div>
 
   <!-- Mobile: prevent scroll drift and accidental zoom -->
   <script>
@@ -90,8 +113,14 @@
     }, { passive: false });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <!-- Firebase compat SDKs (v10) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
   <script src="js/data.js"></script>
   <script src="js/save.js"></script>
+  <script src="js/firebase-save.js"></script>
   <script src="js/scenes/BootScene.js"></script>
   <script src="js/scenes/CharacterSelectScene.js"></script>
   <script src="js/scenes/UIScene.js"></script>
