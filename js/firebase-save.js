@@ -14,7 +14,7 @@ window.FirebaseSave = (function () {
   };
 
   const TIMEOUT_MS = 6000;  // give up waiting for Firebase after 6s — game starts anyway
-  const CLOUD_THROTTLE_MS = 5000;  // max one Firestore write per 5 seconds
+  const CLOUD_THROTTLE_MS = 1500;  // max one Firestore write per 1.5 seconds
 
   let _db   = null;
   let _uid  = null;
@@ -128,6 +128,21 @@ window.FirebaseSave = (function () {
         _cloudTimer   = null;
         _cloudPending = null;
       }, CLOUD_THROTTLE_MS);
+    },
+
+    /**
+     * Flush any pending save immediately — called on beforeunload so we don't
+     * lose the last action before the page closes.
+     */
+    flushNow(state) {
+      if (!_db || !_uid) return;
+      if (_cloudTimer) { clearTimeout(_cloudTimer); _cloudTimer = null; }
+      const toWrite = state || _cloudPending;
+      _cloudPending = null;
+      if (!toWrite) return;
+      const payload = { ...toWrite, _savedAt: Date.now() };
+      // Best-effort fire-and-forget (browser may not wait for this, but often does)
+      _docRef().set(payload).catch(() => {});
     },
 
     /** Wipe the cloud save (used by SaveSystem.clear). */

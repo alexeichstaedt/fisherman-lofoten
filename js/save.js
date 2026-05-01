@@ -106,7 +106,7 @@ window.addEventListener('beforeunload', () => {
   const data = SaveSystem._pending || SaveSystem._mem;
   if (data) {
     try { localStorage.setItem('lofoten_rpg', JSON.stringify(data)); } catch(e) {}
-    if (window.FirebaseSave) window.FirebaseSave.saveAsync(data);
+    if (window.FirebaseSave) window.FirebaseSave.flushNow(data);
     SaveSystem._pending = null;
   }
 });
